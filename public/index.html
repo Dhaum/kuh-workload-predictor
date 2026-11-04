@@ -75,13 +75,19 @@
     ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.35); border-radius: 999px; }
     ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.6); }
 
-    /* Frosted Glass Toolbar (노치 안전 영역 패딩 동기화) */
+    /* Frosted Glass Toolbar (노치 및 시스템 블러 안전 영역 패딩 동기화) */
     .stageshow-glass {
       background: rgba(255, 255, 255, 0.86);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid rgba(226, 232, 240, 0.85);
-      padding-top: calc(0.625rem + env(safe-area-inset-top, 0px)) !important;
+      padding-top: calc(env(safe-area-inset-top, 0px) + 1.75rem) !important;
+    }
+
+    @media (min-width: 640px) {
+      .stageshow-glass {
+        padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem) !important;
+      }
     }
 
     /* 카드 입체감 & 부드러운 그림자 */
@@ -289,7 +295,7 @@
   <div>
 
 <!-- HEADER / NAVIGATION (Stageshow Frosted Chrome) -->
-    <header class="stageshow-glass sticky top-0 z-30 px-3 sm:px-6 pb-2.5 transition-all" style="padding-top: calc(0.625rem + env(safe-area-inset-top, 0px)) !important;">
+    <header class="stageshow-glass sticky top-0 z-30 px-3 sm:px-6 pb-2.5 transition-all">
       <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
         
         <!-- Brand & Title & Mobile Dark Toggle -->
