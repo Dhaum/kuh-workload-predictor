@@ -5,19 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>건국대학교병원 외래 출근부</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💊</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💊</text></svg>">
+  <!-- 모바일 웹앱 전체화면 모드 (주소창 숨기기 및 앱 스타일) -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="외래출근부">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#ffffff">
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
   <style>
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-thumb { background: rgba(150, 150, 150, 0.3); border-radius: 3px; }
     
     /* 과별 고유 색상 칩 규격 */
-    /* Tier 1 */
     .chip-neuro   { background-color: #f3e8ff; color: #6b21a8; border: 1px solid #d8b4fe; } /* 신경과: 보라 */
     .chip-endo    { background-color: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; } /* 내분비: 주황 */
     .chip-cardio  { background-color: #ffe4e6; color: #be123c; border: 1px solid #fecdd3; } /* 심혈관: 로즈 */
     .chip-nephro  { background-color: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; } /* 신장: 하늘 */
 
-    /* Tier 2 */
     .chip-onco    { background-color: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; } /* 종양혈액: 파랑 */
     .chip-pulmo   { background-color: #ccfbf1; color: #0f766e; border: 1px solid #99f6e4; } /* 호흡기: 틸 */
     .chip-rheum   { background-color: #fce7f3; color: #be185d; border: 1px solid #fbcfe8; } /* 류마티스: 핑크 */
@@ -26,13 +31,11 @@
     .chip-gi      { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; } /* 소화기: 앰버 */
     .chip-cs      { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; } /* 흉부외과: 빨강 */
 
-    /* Tier 3 */
     .chip-pain, .chip-uro, .chip-oph, .chip-ent, .chip-derma, 
     .chip-psych, .chip-fm, .chip-gs, .chip-obgy, .chip-pedia, .chip-rm, .chip-inf {
       background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;
     }
 
-    /* 휴진 처리 */
     .chip-closed {
       text-decoration: line-through;
       opacity: 0.45;
@@ -41,50 +44,43 @@
       border-color: #e2e8f0 !important;
     }
 
-    /* A4 1장 가로 인쇄 최적화 (Print CSS) */
+    /* A4 1장 가로 인쇄 최적화 */
     @media print {
       body { padding: 0 !important; background: white !important; color: black !important; font-size: 8.5pt !important; }
       .no-print { display: none !important; }
-      #viewWeekly { border: 1px solid #000 !important; box-shadow: none !important; }
+      #viewWeeklyTable { border: 1px solid #000 !important; box-shadow: none !important; display: block !important; }
+      #viewWeeklyMobile { display: none !important; }
       table { border-collapse: collapse !important; width: 100% !important; }
       th, td { border: 1px solid #999 !important; padding: 4px !important; }
-      .chip-neuro, .chip-endo, .chip-cardio, .chip-nephro, .chip-onco, .chip-pulmo, 
-      .chip-rheum, .chip-ortho, .chip-ns, .chip-gi, .chip-cs, .chip-pain {
-        border: 1px solid #bbb !important;
-        background: transparent !important;
-        color: black !important;
-        padding: 1px 3px !important;
-        font-size: 8pt !important;
-      }
       @page { size: landscape; margin: 8mm; }
     }
   </style>
 </head>
-<body class="bg-[var(--card)] text-[var(--foreground)] antialiased p-3 sm:p-5 min-h-screen flex flex-col justify-between">
+<body class="bg-[var(--card)] text-[var(--foreground)] antialiased p-2.5 sm:p-5 min-h-screen flex flex-col justify-between">
 
-  <!-- TOP WRAPPER -->
+  <!-- TOP CONTENT WRAPPER -->
   <div>
-    <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[var(--border)] gap-2.5">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[var(--border)] gap-2">
       <div>
         <div class="flex items-center gap-2">
           <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-blue-600/20 text-blue-600 font-black text-sm">KUH</span>
-          <h1 class="text-lg font-bold text-[var(--foreground)] tracking-tight">건국대병원 외래 출근부</h1>
-          <span class="px-2 py-0.5 text-[11px] rounded-full bg-emerald-500/15 text-emerald-700 font-semibold">23개 진료과</span>
+          <h1 class="text-base sm:text-lg font-bold text-[var(--foreground)] tracking-tight">건국대병원 외래 출근부</h1>
+          <span class="px-2 py-0.5 text-[10px] sm:text-[11px] rounded-full bg-emerald-500/15 text-emerald-700 font-semibold">모바일 완벽 대응</span>
         </div>
-        <p class="text-xs text-[var(--muted-foreground)] mt-0.5">간결한 이름·색상 뷰 · 3단계 티어 필터 · 특정 날짜 전체 출근부</p>
+        <p class="text-[11px] sm:text-xs text-[var(--muted-foreground)] mt-0.5">간결한 이름·색상 뷰 · 티어별 점선 분할 · 특정 날짜 출근부</p>
       </div>
 
       <!-- Action Buttons & Tabs -->
-      <div class="flex items-center gap-2 no-print flex-wrap">
-        <button onclick="window.print()" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-[var(--border)] bg-[var(--background)] hover:bg-[var(--border)] transition-all flex items-center gap-1">
-          <span>🖨️ 인쇄 (A4)</span>
+      <div class="flex items-center gap-1.5 no-print flex-wrap">
+        <button onclick="window.print()" class="hidden sm:flex px-2.5 py-1 text-xs font-semibold rounded-lg border border-[var(--border)] bg-[var(--background)] hover:bg-[var(--border)] transition-all items-center gap-1">
+          <span>🖨️ A4 인쇄</span>
         </button>
-        <div class="bg-[var(--background)] p-1 rounded-lg border border-[var(--border)] flex text-xs">
-          <button id="tabWeekly" onclick="switchView('weekly')" class="px-3 py-1 rounded-md font-bold bg-blue-600 text-white transition-all shadow-sm">
-            주간 매트릭스
+        <div class="bg-[var(--background)] p-1 rounded-lg border border-[var(--border)] flex text-xs w-full sm:w-auto justify-center">
+          <button id="tabWeekly" onclick="switchView('weekly')" class="flex-1 sm:flex-none px-3 py-1 rounded-md font-bold bg-blue-600 text-white transition-all shadow-sm">
+            주간 일정표
           </button>
-          <button id="tabDaily" onclick="switchView('daily')" class="px-3 py-1 rounded-md font-semibold text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all">
+          <button id="tabDaily" onclick="switchView('daily')" class="flex-1 sm:flex-none px-3 py-1 rounded-md font-semibold text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all">
             📅 특정 날짜 출근부
           </button>
         </div>
@@ -92,169 +88,206 @@
     </div>
 
     <!-- TIERED FILTER PANEL (no-print) -->
-    <div class="my-3 p-3 rounded-xl bg-[var(--background)] border border-[var(--border)] space-y-2 text-xs no-print shadow-sm">
-      <!-- Preset Bar -->
-      <div class="flex items-center justify-between pb-2 border-b border-[var(--border)] flex-wrap gap-2">
-        <span class="font-bold text-[var(--foreground)] flex items-center gap-1.5">
+    <div class="my-2.5 sm:my-3 p-2.5 sm:p-3 rounded-xl bg-[var(--background)] border border-[var(--border)] space-y-2 text-xs no-print shadow-sm">
+      <div class="flex items-center justify-between pb-1.5 border-b border-[var(--border)] flex-wrap gap-1.5">
+        <span class="font-bold text-[var(--foreground)] flex items-center gap-1 text-[11px] sm:text-xs">
           <span>🔍 진료과 필터</span>
-          <span class="text-[11px] font-normal text-[var(--muted-foreground)]">(티어별 선택 및 개별 토글 가능)</span>
         </span>
-        <div class="flex items-center gap-1">
-          <button onclick="applyPreset('core')" class="px-2.5 py-1 rounded bg-blue-600/10 text-blue-600 font-bold hover:bg-blue-600/20">
-            ⚡ Tier 1만 (기본)
+        <div class="flex items-center gap-1 flex-wrap">
+          <button onclick="applyPreset('core')" class="px-2 py-0.5 rounded bg-blue-600/10 text-blue-600 font-bold hover:bg-blue-600/20 text-[11px]">
+            ⚡ Tier 1만
           </button>
-          <button onclick="applyPreset('tier12')" class="px-2.5 py-1 rounded bg-indigo-500/10 text-indigo-600 font-bold hover:bg-indigo-500/20">
+          <button onclick="applyPreset('tier12')" class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-600 font-bold hover:bg-indigo-500/20 text-[11px]">
             ⚡ Tier 1+2
           </button>
-          <button onclick="applyPreset('all')" class="px-2.5 py-1 rounded bg-emerald-500/10 text-emerald-600 font-bold hover:bg-emerald-500/20">
+          <button onclick="applyPreset('all')" class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 font-bold hover:bg-emerald-500/20 text-[11px]">
             ⚡ 전과 전체
           </button>
-          <button onclick="applyPreset('none')" class="px-2.5 py-1 rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+          <button onclick="applyPreset('none')" class="px-2 py-0.5 rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)] text-[11px]">
             초기화
           </button>
         </div>
       </div>
 
       <!-- Tier 1 -->
-      <div class="flex items-start gap-2">
-        <div class="w-24 shrink-0 flex items-center justify-between pt-0.5">
-          <span class="font-bold text-purple-700">Tier 1 (고난도)</span>
+      <div class="flex items-start gap-1.5 sm:gap-2">
+        <div class="w-20 sm:w-24 shrink-0 flex items-center justify-between pt-0.5">
+          <span class="font-bold text-purple-700 text-[11px] sm:text-xs">Tier 1 (고난도)</span>
           <button onclick="toggleTierGroup('tier1')" class="text-[10px] text-[var(--muted-foreground)] hover:underline">토글</button>
         </div>
         <div class="flex flex-wrap gap-1">
-          <button onclick="toggleDept('neuro')" id="flt-neuro" class="px-2 py-0.5 rounded font-semibold chip-neuro">✓ 신경과</button>
-          <button onclick="toggleDept('endo')" id="flt-endo" class="px-2 py-0.5 rounded font-semibold chip-endo">✓ 내분비내과</button>
-          <button onclick="toggleDept('cardio')" id="flt-cardio" class="px-2 py-0.5 rounded font-semibold chip-cardio">✓ 심장혈관내과</button>
-          <button onclick="toggleDept('nephro')" id="flt-nephro" class="px-2 py-0.5 rounded font-semibold chip-nephro">✓ 신장내과</button>
+          <button onclick="toggleDept('neuro')" id="flt-neuro" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-neuro text-[11px]">✓ 신경과</button>
+          <button onclick="toggleDept('endo')" id="flt-endo" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-endo text-[11px]">✓ 내분비내과</button>
+          <button onclick="toggleDept('cardio')" id="flt-cardio" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-cardio text-[11px]">✓ 심장혈관내과</button>
+          <button onclick="toggleDept('nephro')" id="flt-nephro" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-nephro text-[11px]">✓ 신장내과</button>
         </div>
       </div>
 
       <!-- Tier 2 -->
-      <div class="flex items-start gap-2 pt-1 border-t border-[var(--border)]/60">
-        <div class="w-24 shrink-0 flex items-center justify-between pt-0.5">
-          <span class="font-bold text-sky-700">Tier 2 (특수/주요)</span>
+      <div class="flex items-start gap-1.5 sm:gap-2 pt-1 border-t border-[var(--border)]/60">
+        <div class="w-20 sm:w-24 shrink-0 flex items-center justify-between pt-0.5">
+          <span class="font-bold text-sky-700 text-[11px] sm:text-xs">Tier 2 (주요과)</span>
           <button onclick="toggleTierGroup('tier2')" class="text-[10px] text-[var(--muted-foreground)] hover:underline">토글</button>
         </div>
         <div class="flex flex-wrap gap-1">
-          <button onclick="toggleDept('onco')" id="flt-onco" class="px-2 py-0.5 rounded font-semibold chip-onco opacity-30 grayscale">+ 종양혈액내과</button>
-          <button onclick="toggleDept('pulmo')" id="flt-pulmo" class="px-2 py-0.5 rounded font-semibold chip-pulmo opacity-30 grayscale">+ 호흡기내과</button>
-          <button onclick="toggleDept('rheum')" id="flt-rheum" class="px-2 py-0.5 rounded font-semibold chip-rheum opacity-30 grayscale">+ 류마티스내과</button>
-          <button onclick="toggleDept('ortho')" id="flt-ortho" class="px-2 py-0.5 rounded font-semibold chip-ortho opacity-30 grayscale">+ 정형외과</button>
-          <button onclick="toggleDept('ns')" id="flt-ns" class="px-2 py-0.5 rounded font-semibold chip-ns opacity-30 grayscale">+ 신경외과</button>
-          <button onclick="toggleDept('gi')" id="flt-gi" class="px-2 py-0.5 rounded font-semibold chip-gi opacity-30 grayscale">+ 소화기내과</button>
-          <button onclick="toggleDept('cs')" id="flt-cs" class="px-2 py-0.5 rounded font-semibold chip-cs opacity-30 grayscale">+ 심장혈관흉부외과</button>
+          <button onclick="toggleDept('onco')" id="flt-onco" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-onco opacity-30 grayscale text-[11px]">+ 종양혈액</button>
+          <button onclick="toggleDept('pulmo')" id="flt-pulmo" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-pulmo opacity-30 grayscale text-[11px]">+ 호흡기</button>
+          <button onclick="toggleDept('rheum')" id="flt-rheum" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-rheum opacity-30 grayscale text-[11px]">+ 류마티스</button>
+          <button onclick="toggleDept('ortho')" id="flt-ortho" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-ortho opacity-30 grayscale text-[11px]">+ 정형외과</button>
+          <button onclick="toggleDept('ns')" id="flt-ns" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-ns opacity-30 grayscale text-[11px]">+ 신경외과</button>
+          <button onclick="toggleDept('gi')" id="flt-gi" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-gi opacity-30 grayscale text-[11px]">+ 소화기</button>
+          <button onclick="toggleDept('cs')" id="flt-cs" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-cs opacity-30 grayscale text-[11px]">+ 흉부외과</button>
         </div>
       </div>
 
       <!-- Tier 3 -->
-      <div class="flex items-start gap-2 pt-1 border-t border-[var(--border)]/60">
-        <div class="w-24 shrink-0 flex items-center justify-between pt-0.5">
-          <span class="font-bold text-slate-500">Tier 3 (일반/단기)</span>
+      <div class="flex items-start gap-1.5 sm:gap-2 pt-1 border-t border-[var(--border)]/60">
+        <div class="w-20 sm:w-24 shrink-0 flex items-center justify-between pt-0.5">
+          <span class="font-bold text-slate-500 text-[11px] sm:text-xs">Tier 3 (일반)</span>
           <button onclick="toggleTierGroup('tier3')" class="text-[10px] text-[var(--muted-foreground)] hover:underline">토글</button>
         </div>
         <div class="flex flex-wrap gap-1">
-          <button onclick="toggleDept('pain')" id="flt-pain" class="px-2 py-0.5 rounded font-semibold chip-pain opacity-30 grayscale">+ 마취통증</button>
-          <button onclick="toggleDept('uro')" id="flt-uro" class="px-2 py-0.5 rounded font-semibold chip-uro opacity-30 grayscale">+ 비뇨의학과</button>
-          <button onclick="toggleDept('oph')" id="flt-oph" class="px-2 py-0.5 rounded font-semibold chip-oph opacity-30 grayscale">+ 안과</button>
-          <button onclick="toggleDept('ent')" id="flt-ent" class="px-2 py-0.5 rounded font-semibold chip-ent opacity-30 grayscale">+ 이비인후과</button>
-          <button onclick="toggleDept('derma')" id="flt-derma" class="px-2 py-0.5 rounded font-semibold chip-derma opacity-30 grayscale">+ 피부과</button>
-          <button onclick="toggleDept('psych')" id="flt-psych" class="px-2 py-0.5 rounded font-semibold chip-psych opacity-30 grayscale">+ 정신과</button>
-          <button onclick="toggleDept('fm')" id="flt-fm" class="px-2 py-0.5 rounded font-semibold chip-fm opacity-30 grayscale">+ 가정의학과</button>
-          <button onclick="toggleDept('gs')" id="flt-gs" class="px-2 py-0.5 rounded font-semibold chip-gs opacity-30 grayscale">+ 외과</button>
-          <button onclick="toggleDept('obgy')" id="flt-obgy" class="px-2 py-0.5 rounded font-semibold chip-obgy opacity-30 grayscale">+ 산부인과</button>
-          <button onclick="toggleDept('pedia')" id="flt-pedia" class="px-2 py-0.5 rounded font-semibold chip-pedia opacity-30 grayscale">+ 소아청소년과</button>
-          <button onclick="toggleDept('rm')" id="flt-rm" class="px-2 py-0.5 rounded font-semibold chip-rm opacity-30 grayscale">+ 재활의학과</button>
-          <button onclick="toggleDept('inf')" id="flt-inf" class="px-2 py-0.5 rounded font-semibold chip-inf opacity-30 grayscale">+ 감염내과</button>
+          <button onclick="toggleDept('pain')" id="flt-pain" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-pain opacity-30 grayscale text-[11px]">+ 통증</button>
+          <button onclick="toggleDept('uro')" id="flt-uro" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-uro opacity-30 grayscale text-[11px]">+ 비뇨</button>
+          <button onclick="toggleDept('oph')" id="flt-oph" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-oph opacity-30 grayscale text-[11px]">+ 안과</button>
+          <button onclick="toggleDept('ent')" id="flt-ent" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-ent opacity-30 grayscale text-[11px]">+ 이비인후</button>
+          <button onclick="toggleDept('derma')" id="flt-derma" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-derma opacity-30 grayscale text-[11px]">+ 피부</button>
+          <button onclick="toggleDept('psych')" id="flt-psych" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-psych opacity-30 grayscale text-[11px]">+ 정신</button>
+          <button onclick="toggleDept('fm')" id="flt-fm" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-fm opacity-30 grayscale text-[11px]">+ 가정</button>
+          <button onclick="toggleDept('gs')" id="flt-gs" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-gs opacity-30 grayscale text-[11px]">+ 외과</button>
+          <button onclick="toggleDept('obgy')" id="flt-obgy" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-obgy opacity-30 grayscale text-[11px]">+ 산부인과</button>
+          <button onclick="toggleDept('pedia')" id="flt-pedia" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-pedia opacity-30 grayscale text-[11px]">+ 소아</button>
+          <button onclick="toggleDept('rm')" id="flt-rm" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-rm opacity-30 grayscale text-[11px]">+ 재활</button>
+          <button onclick="toggleDept('inf')" id="flt-inf" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-inf opacity-30 grayscale text-[11px]">+ 감염</button>
         </div>
       </div>
     </div>
 
-    <!-- VIEW 1: WEEKLY MATRIX VIEW -->
-    <div id="viewWeekly" class="rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--background)] shadow-sm">
-      <div class="p-2.5 bg-[var(--card)] border-b border-[var(--border)] flex items-center justify-between text-xs">
-        <div class="flex items-center gap-2">
-          <span class="font-bold text-[var(--foreground)]" id="weekRangeTitle">이번 주 외래 일정</span>
-          <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600 font-semibold" id="todayIndicator">오늘 자동 하이라이트</span>
+    <!-- VIEW 1: WEEKLY VIEW (HYBRID: Desktop Table + Mobile Day-Card) -->
+    <div id="viewWeekly" class="space-y-3">
+      
+      <!-- 1-A: MOBILE EXCLUSIVE DAY-PICKER CARD VIEW (< sm 화면) -->
+      <div id="viewWeeklyMobile" class="block sm:hidden space-y-2.5">
+        <!-- Day Selector Tabs (월 | 화 | 수 | 목[오늘] | 금) -->
+        <div class="grid grid-cols-5 gap-1 bg-[var(--background)] p-1 rounded-xl border border-[var(--border)] text-center text-xs font-semibold">
+          <button onclick="selectMobileDay('월')" id="mTab-월" class="py-1.5 rounded-lg transition-all">월</button>
+          <button onclick="selectMobileDay('화')" id="mTab-화" class="py-1.5 rounded-lg transition-all">화</button>
+          <button onclick="selectMobileDay('수')" id="mTab-수" class="py-1.5 rounded-lg transition-all">수</button>
+          <button onclick="selectMobileDay('목')" id="mTab-목" class="py-1.5 rounded-lg transition-all">목</button>
+          <button onclick="selectMobileDay('금')" id="mTab-금" class="py-1.5 rounded-lg transition-all">금</button>
         </div>
-        <span class="text-[var(--muted-foreground)] no-print">요일 헤더를 클릭하면 해당 일의 전체 출근부로 이동합니다.</span>
+
+        <!-- Selected Day Schedule Card -->
+        <div class="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--background)] shadow-sm space-y-3">
+          <div class="flex items-center justify-between pb-2 border-b border-[var(--border)]">
+            <span class="font-bold text-sm text-[var(--foreground)]" id="mCardTitle">오늘 외래 일정</span>
+            <span class="text-[10px] text-blue-600 font-semibold cursor-pointer" onclick="switchView('daily')">전체 명단 보기 →</span>
+          </div>
+
+          <!-- AM Block -->
+          <div class="space-y-1.5">
+            <div class="flex items-center gap-1.5 text-xs font-bold text-amber-600">
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+              <span>오전 (09:00 - 12:30)</span>
+            </div>
+            <div id="mAmList" class="p-2.5 rounded-lg bg-[var(--card)] border border-[var(--border)]"></div>
+          </div>
+
+          <!-- PM Block -->
+          <div class="space-y-1.5 pt-1 border-t border-[var(--border)]/60">
+            <div class="flex items-center gap-1.5 text-xs font-bold text-blue-600">
+              <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+              <span>오후 (13:30 - 17:00)</span>
+            </div>
+            <div id="mPmList" class="p-2.5 rounded-lg bg-[var(--card)] border border-[var(--border)]"></div>
+          </div>
+        </div>
       </div>
 
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="border-b border-[var(--border)] bg-[var(--card)]/50 text-xs text-[var(--muted-foreground)]" id="weeklyThead">
-              <th class="p-2.5 w-16 text-center font-semibold">시간</th>
-              <!-- Populated dynamically: 월, 화, 수, 목, 금 -->
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-[var(--border)] text-xs">
-            <!-- AM Row -->
-            <tr class="hover:bg-[var(--card)]/30">
-              <td class="p-2.5 text-center font-bold bg-[var(--card)]/40 text-[var(--foreground)]">
-                <div>오전</div>
-                <div class="text-[10px] text-[var(--muted-foreground)] font-normal">09:00 - 12:30</div>
-              </td>
-              <td id="cell-AM-0" class="p-2 align-top border-l border-[var(--border)]"><div class="flex flex-wrap gap-1"></div></td>
-              <td id="cell-AM-1" class="p-2 align-top border-l border-[var(--border)]"><div class="flex flex-wrap gap-1"></div></td>
-              <td id="cell-AM-2" class="p-2 align-top border-l border-[var(--border)]"><div class="flex flex-wrap gap-1"></div></td>
-              <td id="cell-AM-3" class="p-2 align-top border-l border-[var(--border)]"><div class="flex flex-wrap gap-1"></div></td>
-              <td id="cell-AM-4" class="p-2 align-top border-l border-[var(--border)]"><div class="flex flex-wrap gap-1"></div></td>
-            </tr>
-            <!-- PM Row -->
-            <tr class="hover:bg-[var(--card)]/30">
-              <td class="p-2.5 text-center font-bold bg-[var(--card)]/40 text-[var(--foreground)]">
-                <div>오후</div>
-                <div class="text-[10px] text-[var(--muted-foreground)] font-normal">13:30 - 17:00</div>
-              </td>
-              <td id="cell-PM-0" class="p-2 align-top border-l border-[var(--border)]"><div class="flex flex-wrap gap-1"></div></td>
-              <td id="cell-PM-1" class="p-2 align-top border-l border-[var(--border)]"><div class="flex flex-wrap gap-1"></div></td>
-              <td id="cell-PM-2" class="p-2 align-top border-l border-[var(--border)]"><div class="flex flex-wrap gap-1"></div></td>
-              <td id="cell-PM-3" class="p-2 align-top border-l border-[var(--border)]"><div class="flex flex-wrap gap-1"></div></td>
-              <td id="cell-PM-4" class="p-2 align-top border-l border-[var(--border)]"><div class="flex flex-wrap gap-1"></div></td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- 1-B: DESKTOP TABLE VIEW (≥ sm 화면) -->
+      <div id="viewWeeklyTable" class="hidden sm:block rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--background)] shadow-sm">
+        <div class="p-2.5 bg-[var(--card)] border-b border-[var(--border)] flex items-center justify-between text-xs">
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-[var(--foreground)]" id="weekRangeTitle">2026년 11월 1주차 외래 일정</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600 font-semibold">Today 하이라이트 & 티어별 점선 분할</span>
+          </div>
+          <span class="text-[var(--muted-foreground)] no-print">요일 헤더를 클릭하면 해당 일의 전체 출근부로 이동합니다.</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-[var(--border)] bg-[var(--card)]/50 text-xs text-[var(--muted-foreground)]" id="weeklyThead">
+                <th class="p-2.5 w-16 text-center font-semibold">시간</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[var(--border)] text-xs">
+              <tr class="hover:bg-[var(--card)]/30">
+                <td class="p-2.5 text-center font-bold bg-[var(--card)]/40 text-[var(--foreground)]">
+                  <div>오전</div>
+                  <div class="text-[10px] text-[var(--muted-foreground)] font-normal">09:00 - 12:30</div>
+                </td>
+                <td id="cell-AM-0" class="p-2 align-top border-l border-[var(--border)]"></td>
+                <td id="cell-AM-1" class="p-2 align-top border-l border-[var(--border)]"></td>
+                <td id="cell-AM-2" class="p-2 align-top border-l border-[var(--border)]"></td>
+                <td id="cell-AM-3" class="p-2 align-top border-l border-[var(--border)]"></td>
+                <td id="cell-AM-4" class="p-2 align-top border-l border-[var(--border)]"></td>
+              </tr>
+              <tr class="hover:bg-[var(--card)]/30">
+                <td class="p-2.5 text-center font-bold bg-[var(--card)]/40 text-[var(--foreground)]">
+                  <div>오후</div>
+                  <div class="text-[10px] text-[var(--muted-foreground)] font-normal">13:30 - 17:00</div>
+                </td>
+                <td id="cell-PM-0" class="p-2 align-top border-l border-[var(--border)]"></td>
+                <td id="cell-PM-1" class="p-2 align-top border-l border-[var(--border)]"></td>
+                <td id="cell-PM-2" class="p-2 align-top border-l border-[var(--border)]"></td>
+                <td id="cell-PM-3" class="p-2 align-top border-l border-[var(--border)]"></td>
+                <td id="cell-PM-4" class="p-2 align-top border-l border-[var(--border)]"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
+
     </div>
 
     <!-- VIEW 2: DAILY DRILLDOWN VIEW -->
-    <div id="viewDaily" class="hidden rounded-xl border border-[var(--border)] bg-[var(--background)] p-4 shadow-sm">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[var(--border)] gap-2 mb-4">
+    <div id="viewDaily" class="hidden rounded-xl border border-[var(--border)] bg-[var(--background)] p-3 sm:p-4 shadow-sm">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[var(--border)] gap-2 mb-3">
         <div class="flex items-center gap-2">
-          <span class="text-sm font-bold">📅 특정 날짜 전체 의료진 출근 현황</span>
+          <span class="text-xs sm:text-sm font-bold">📅 특정 날짜 전체 출근부</span>
           <select id="dailyDatePicker" onchange="renderDailyView(this.value)" class="text-xs p-1.5 rounded-lg border border-[var(--border)] bg-[var(--card)] font-bold text-blue-600">
-            <!-- Populated dynamically -->
           </select>
         </div>
 
         <div class="flex items-center gap-2 no-print">
-          <input type="text" id="dailySearch" placeholder="교수명 또는 진료과 검색..." oninput="filterDailyList(this.value)" class="text-xs px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--card)] w-48">
-          <button onclick="switchView('weekly')" class="text-xs px-2.5 py-1.5 rounded-lg bg-[var(--card)] border border-[var(--border)] font-semibold hover:bg-[var(--border)]">
-            ← 주간 매트릭스로 복귀
+          <input type="text" id="dailySearch" placeholder="교수명 또는 진료과 검색..." oninput="filterDailyList(this.value)" class="text-xs px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--card)] flex-1 sm:w-48">
+          <button onclick="switchView('weekly')" class="text-xs px-2.5 py-1.5 rounded-lg bg-[var(--card)] border border-[var(--border)] font-semibold hover:bg-[var(--border)] shrink-0">
+            ← 주간 복귀
           </button>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         <!-- AM List -->
-        <div class="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--card)]">
-          <div class="flex items-center justify-between pb-2 mb-3 border-b border-[var(--border)]">
+        <div class="p-3 sm:p-3.5 rounded-xl border border-[var(--border)] bg-[var(--card)]">
+          <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-[var(--border)]">
             <div class="flex items-center gap-2">
               <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-              <span class="font-bold text-sm">오전 외래 (09:00 - 12:30)</span>
+              <span class="font-bold text-xs sm:text-sm">오전 외래 (09:00 - 12:30)</span>
             </div>
-            <span id="amCountBadge" class="text-xs px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 font-bold">0명 진료</span>
+            <span id="amCountBadge" class="text-xs px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 font-bold">0명</span>
           </div>
           <div id="amDoctorList" class="space-y-2"></div>
         </div>
         <!-- PM List -->
-        <div class="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--card)]">
-          <div class="flex items-center justify-between pb-2 mb-3 border-b border-[var(--border)]">
+        <div class="p-3 sm:p-3.5 rounded-xl border border-[var(--border)] bg-[var(--card)]">
+          <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-[var(--border)]">
             <div class="flex items-center gap-2">
               <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-              <span class="font-bold text-sm">오후 외래 (13:30 - 17:00)</span>
+              <span class="font-bold text-xs sm:text-sm">오후 외래 (13:30 - 17:00)</span>
             </div>
-            <span id="pmCountBadge" class="text-xs px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 font-bold">0명 진료</span>
+            <span id="pmCountBadge" class="text-xs px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 font-bold">0명</span>
           </div>
           <div id="pmDoctorList" class="space-y-2"></div>
         </div>
@@ -262,27 +295,26 @@
     </div>
   </div>
 
-  <!-- BOTTOM FOOTER (최하단 최신화 시점 명기) -->
-  <footer class="mt-6 pt-3 border-t border-[var(--border)] flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[var(--muted-foreground)]">
-    <div class="flex items-center gap-2 flex-wrap text-center sm:text-left">
+  <!-- FOOTER -->
+  <footer class="mt-5 pt-3 border-t border-[var(--border)] flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] sm:text-xs text-[var(--muted-foreground)]">
+    <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-center sm:justify-start">
       <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
       <span id="updatedAtText">데이터 최신화: 로딩 중...</span>
       <span class="text-slate-400">·</span>
-      <span>건국대학교병원 외래 일정 기준</span>
+      <span>건국대학교병원 외래 기준</span>
       <span class="text-slate-400">·</span>
-      <span class="bg-[var(--background)] px-1.5 py-0.5 rounded border border-[var(--border)] text-[10px]">매일 아침 1회 자동 갱신</span>
+      <span class="bg-[var(--background)] px-1.5 py-0.5 rounded border border-[var(--border)] text-[10px]">매일 아침 자동 갱신</span>
     </div>
 
     <div class="flex items-center gap-2 no-print">
       <button onclick="fetchScheduleData(true)" id="btnRefresh" class="hover:text-[var(--foreground)] flex items-center gap-1 transition-colors">
         <span>⟳</span>
-        <span class="text-[11px] underline">수동 새로고침</span>
+        <span class="text-[11px] underline">새로고침</span>
       </button>
     </div>
   </footer>
 
   <script>
-    // 23개 진료과 티어 정의
     const tierMapping = {
       tier1: ['neuro', 'endo', 'cardio', 'nephro'],
       tier2: ['onco', 'pulmo', 'rheum', 'ortho', 'ns', 'gi', 'cs'],
@@ -295,8 +327,8 @@
     });
 
     let currentScheduleData = null;
+    let selectedMobileDay = '목';
 
-    // 데이터 가져오기 (Vercel API -> 로컬 JSON -> 내장 폴백)
     async function fetchScheduleData(forceRefresh = false) {
       const btn = document.getElementById('btnRefresh');
       if (btn) btn.innerText = '⟳ 갱신 중...';
@@ -308,7 +340,6 @@
         currentScheduleData = await res.json();
       } catch (err) {
         try {
-          // 로컬 정적 JSON 파일 폴백
           const fallbackRes = await fetch('/data/schedule.json');
           if (!fallbackRes.ok) throw new Error('Local JSON fallback failed');
           currentScheduleData = await fallbackRes.json();
@@ -318,35 +349,40 @@
         }
       }
 
-      if (btn) btn.innerText = '⟳ 수동 새로고침';
+      if (btn) btn.innerText = '⟳ 새로고침';
+      initToday();
       renderAll();
+    }
+
+    function initToday() {
+      const now = new Date();
+      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+      const todayDay = dayNames[now.getDay()];
+      if (['월', '화', '수', '목', '금'].includes(todayDay)) {
+        selectedMobileDay = todayDay;
+      } else {
+        selectedMobileDay = '월';
+      }
     }
 
     function renderAll() {
       if (!currentScheduleData) return;
 
-      // 1. Footer 최신화 시각 표기
       const updateEl = document.getElementById('updatedAtText');
-      if (updateEl) {
-        updateEl.innerText = `데이터 최신화: ${currentScheduleData.updatedAt || '방금 전'}`;
-      }
+      if (updateEl) updateEl.innerText = `데이터 최신화: ${currentScheduleData.updatedAt || '방금 전'}`;
 
-      // 2. 주간 테이블 헤더 렌더링 & Today 하이라이트
       renderWeeklyHeader(currentScheduleData.weekDays);
-
-      // 3. 주간 셀 렌더링
       renderWeeklyCells(currentScheduleData.weekly, currentScheduleData.weekDays);
-
-      // 4. 일별 셀렉트박스 및 상세 렌더링
+      renderMobileDayView();
       renderDailyOptions(currentScheduleData.weekDays);
       renderDailyView(document.getElementById('dailyDatePicker').value);
     }
 
+    // DESKTOP: 주간 테이블 헤더
     function renderWeeklyHeader(weekDays) {
       const thead = document.getElementById('weeklyThead');
       let html = '<th class="p-2.5 w-16 text-center font-semibold">시간</th>';
 
-      // 오늘 날짜 계산 (YYYYMMDD)
       const now = new Date();
       const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
       const dayNames = ['일','월','화','수','목','금','토'];
@@ -367,6 +403,7 @@
       thead.innerHTML = html;
     }
 
+    // DESKTOP: 주간 테이블 셀 렌더링 (티어별 점선 분할)
     function renderWeeklyCells(weekly, weekDays) {
       const dayNames = ['월', '화', '수', '목', '금'];
       ['AM', 'PM'].forEach(slot => {
@@ -375,23 +412,19 @@
           if (!cell) return;
           const docs = (weekly[slot] && weekly[slot][dName]) || [];
           
-          // 1. 활성화된 진료과에 속하는 의사만 티어별로 분류
           const tier1Docs = docs.filter(d => activeDepts[d.deptKey] && tierMapping.tier1.includes(d.deptKey));
           const tier2Docs = docs.filter(d => activeDepts[d.deptKey] && tierMapping.tier2.includes(d.deptKey));
           const tier3Docs = docs.filter(d => activeDepts[d.deptKey] && tierMapping.tier3.includes(d.deptKey));
 
-          // 2. 존재하는(교수가 1명 이상 있는) 유효 티어 그룹만 수집
           const validTierGroups = [];
           if (tier1Docs.length > 0) validTierGroups.push({ tier: 1, docs: tier1Docs });
           if (tier2Docs.length > 0) validTierGroups.push({ tier: 2, docs: tier2Docs });
           if (tier3Docs.length > 0) validTierGroups.push({ tier: 3, docs: tier3Docs });
 
-          // 3. 유효 티어 사이에만 가로 점선(border-t border-dashed) 렌더링
           if (validTierGroups.length === 0) {
             cell.innerHTML = '<span class="text-[10px] text-slate-400">-</span>';
           } else {
             const html = validTierGroups.map((group, groupIdx) => {
-              // 첫 번째 티어 그룹은 점선 없음, 두 번째 이상부터 상단 점선 분할선 부여
               const dividerClass = groupIdx === 0 ? '' : 'pt-1.5 mt-1.5 border-t border-dashed border-[var(--border)]';
               const chipsHtml = group.docs.map(doc => {
                 const closedClass = doc.isClosed ? 'chip-closed' : '';
@@ -412,9 +445,82 @@
       });
     }
 
+    // MOBILE: 요일별 세그먼트 탭 선택 및 카드 렌더링 (< sm 전용)
+    function selectMobileDay(dayName) {
+      selectedMobileDay = dayName;
+      renderMobileDayView();
+    }
+
+    function renderMobileDayView() {
+      if (!currentScheduleData || !currentScheduleData.weekly) return;
+
+      const dayNames = ['월', '화', '수', '목', '금'];
+      const now = new Date();
+      const todayDayName = ['일','월','화','수','목','금','토'][now.getDay()];
+
+      dayNames.forEach(d => {
+        const btn = document.getElementById(`mTab-${d}`);
+        if (!btn) return;
+        const isSelected = (d === selectedMobileDay);
+        const isToday = (d === todayDayName);
+
+        if (isSelected) {
+          btn.className = 'py-1.5 rounded-lg font-bold bg-blue-600 text-white shadow-sm';
+          btn.innerHTML = `${d}${isToday ? ' <span class="text-[9px] px-1 bg-white text-blue-600 rounded">오늘</span>' : ''}`;
+        } else {
+          btn.className = `py-1.5 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] ${isToday ? 'border border-blue-500/50 text-blue-600 font-bold' : ''}`;
+          btn.innerHTML = `${d}${isToday ? ' <span class="text-[9px] text-blue-600">•</span>' : ''}`;
+        }
+      });
+
+      const titleEl = document.getElementById('mCardTitle');
+      if (titleEl) {
+        titleEl.innerText = `${selectedMobileDay}요일 외래 일정 ${selectedMobileDay === todayDayName ? '(오늘)' : ''}`;
+      }
+
+      ['AM', 'PM'].forEach(slot => {
+        const targetId = slot === 'AM' ? 'mAmList' : 'mPmList';
+        const el = document.getElementById(targetId);
+        if (!el) return;
+
+        const docs = (currentScheduleData.weekly[slot] && currentScheduleData.weekly[slot][selectedMobileDay]) || [];
+        
+        const tier1Docs = docs.filter(d => activeDepts[d.deptKey] && tierMapping.tier1.includes(d.deptKey));
+        const tier2Docs = docs.filter(d => activeDepts[d.deptKey] && tierMapping.tier2.includes(d.deptKey));
+        const tier3Docs = docs.filter(d => activeDepts[d.deptKey] && tierMapping.tier3.includes(d.deptKey));
+
+        const validTierGroups = [];
+        if (tier1Docs.length > 0) validTierGroups.push({ tier: 1, docs: tier1Docs });
+        if (tier2Docs.length > 0) validTierGroups.push({ tier: 2, docs: tier2Docs });
+        if (tier3Docs.length > 0) validTierGroups.push({ tier: 3, docs: tier3Docs });
+
+        if (validTierGroups.length === 0) {
+          el.innerHTML = '<span class="text-xs text-[var(--muted-foreground)]">출근 의료진이 없습니다.</span>';
+        } else {
+          const html = validTierGroups.map((group, groupIdx) => {
+            const dividerClass = groupIdx === 0 ? '' : 'pt-2 mt-2 border-t border-dashed border-[var(--border)]';
+            const chipsHtml = group.docs.map(doc => {
+              const closedClass = doc.isClosed ? 'chip-closed' : '';
+              const closedBadge = doc.isClosed ? ` <span class="text-[9px] text-rose-600 font-bold">[${doc.closedReason || '휴진'}]</span>` : '';
+              return `
+                <span class="${doc.chipClass} ${closedClass} px-2 py-0.5 rounded text-xs font-semibold inline-block">
+                  ${doc.name}${closedBadge}
+                </span>
+              `;
+            }).join(' ');
+
+            return `<div class="${dividerClass} flex flex-wrap gap-1.5">${chipsHtml}</div>`;
+          }).join('');
+
+          el.innerHTML = html;
+        }
+      });
+    }
+
+    // 일별 상세 뷰
     function renderDailyOptions(weekDays) {
       const sel = document.getElementById('dailyDatePicker');
-      if (sel.options.length > 0) return; // 이미 채워져 있으면 스킵
+      if (sel.options.length > 0) return;
 
       const now = new Date();
       const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
@@ -467,13 +573,12 @@
       const pmRes = buildGroupedList(data.PM || []);
 
       document.getElementById('amDoctorList').innerHTML = amRes.html;
-      document.getElementById('amCountBadge').innerText = `${amRes.count}명 진료`;
+      document.getElementById('amCountBadge').innerText = `${amRes.count}명`;
 
       document.getElementById('pmDoctorList').innerHTML = pmRes.html;
-      document.getElementById('pmCountBadge').innerText = `${pmRes.count}명 진료`;
+      document.getElementById('pmCountBadge').innerText = `${pmRes.count}명`;
     }
 
-    // 필터 제어 함수들
     function toggleDept(deptKey) {
       activeDepts[deptKey] = !activeDepts[deptKey];
       updateFiltersUI();
@@ -496,7 +601,6 @@
     }
 
     function updateFiltersUI() {
-      // 버튼 상태
       for (const k in activeDepts) {
         const btn = document.getElementById(`flt-${k}`);
         if (!btn) continue;
@@ -510,12 +614,11 @@
         }
       }
 
-      // 주간 셀 동적 티어 점선 재렌더링
       if (currentScheduleData && currentScheduleData.weekly) {
         renderWeeklyCells(currentScheduleData.weekly, currentScheduleData.weekDays);
+        renderMobileDayView();
       }
 
-      // 일별 뷰 재렌더링
       const dateKey = document.getElementById('dailyDatePicker').value;
       if (dateKey) renderDailyView(dateKey);
     }
@@ -553,10 +656,9 @@
       renderDailyView(document.getElementById('dailyDatePicker').value);
     }
 
-    // 오프라인/테스트용 목업 데이터 폴백
     function getMockFallbackData() {
       return {
-        updatedAt: '2026-11-05 08:00:00 (초기 캐시)',
+        updatedAt: '2026-11-05 01:34:50',
         weekDays: [
           { dateStr: '20261102', dayName: '월', label: '월 (11/2)' },
           { dateStr: '20261103', dayName: '화', label: '화 (11/3)' },
@@ -566,25 +668,24 @@
         ],
         weekly: {
           AM: {
-            '월': [{ deptKey: 'neuro', name: '김한영', chipClass: 'chip-neuro' }, { deptKey: 'endo', name: '김동림', chipClass: 'chip-endo' }, { deptKey: 'cardio', name: '김현중', chipClass: 'chip-cardio' }],
-            '화': [{ deptKey: 'neuro', name: '문연실', chipClass: 'chip-neuro' }, { deptKey: 'cardio', name: '최지훈', chipClass: 'chip-cardio' }, { deptKey: 'endo', name: '최종한', chipClass: 'chip-endo' }],
-            '수': [{ deptKey: 'neuro', name: '한설희', chipClass: 'chip-neuro' }, { deptKey: 'endo', name: '송기호', chipClass: 'chip-endo' }, { deptKey: 'cardio', name: '권창희', chipClass: 'chip-cardio' }],
-            '목': [{ deptKey: 'neuro', name: '장재원', chipClass: 'chip-neuro' }, { deptKey: 'endo', name: '박경수', chipClass: 'chip-endo' }, { deptKey: 'cardio', name: '황지원', chipClass: 'chip-cardio' }],
-            '금': [{ deptKey: 'neuro', name: '김다영', chipClass: 'chip-neuro' }, { deptKey: 'endo', name: '김숙경', chipClass: 'chip-endo' }, { deptKey: 'cardio', name: '김범성', chipClass: 'chip-cardio' }]
+            '월': [{ deptKey: 'neuro', name: '김한영', chipClass: 'chip-neuro' }],
+            '화': [{ deptKey: 'neuro', name: '문연실', chipClass: 'chip-neuro' }],
+            '수': [{ deptKey: 'neuro', name: '한설희', chipClass: 'chip-neuro' }],
+            '목': [{ deptKey: 'neuro', name: '장재원', chipClass: 'chip-neuro' }, { deptKey: 'endo', name: '박경수', chipClass: 'chip-endo' }],
+            '금': [{ deptKey: 'neuro', name: '김다영', chipClass: 'chip-neuro' }]
           },
           PM: {
-            '월': [{ deptKey: 'neuro', name: '박정진', chipClass: 'chip-neuro' }, { deptKey: 'cardio', name: '김범성', chipClass: 'chip-cardio' }],
-            '화': [{ deptKey: 'neuro', name: '한설희', chipClass: 'chip-neuro' }, { deptKey: 'endo', name: '박경수', chipClass: 'chip-endo', isClosed: true }, { deptKey: 'cardio', name: '김현중', chipClass: 'chip-cardio' }],
-            '수': [{ deptKey: 'neuro', name: '김동욱', chipClass: 'chip-neuro' }, { deptKey: 'cardio', name: '신제욱', chipClass: 'chip-cardio' }],
-            '목': [{ deptKey: 'endo', name: '김동림', chipClass: 'chip-endo' }, { deptKey: 'cardio', name: '정유진', chipClass: 'chip-cardio' }],
-            '금': [{ deptKey: 'neuro', name: '최교민', chipClass: 'chip-neuro' }, { deptKey: 'cardio', name: '정유진', chipClass: 'chip-cardio' }]
+            '월': [{ deptKey: 'neuro', name: '박정진', chipClass: 'chip-neuro' }],
+            '화': [{ deptKey: 'endo', name: '박경수', chipClass: 'chip-endo' }],
+            '수': [{ deptKey: 'neuro', name: '김동욱', chipClass: 'chip-neuro' }],
+            '목': [{ deptKey: 'neuro', name: '김동욱', chipClass: 'chip-neuro', isClosed: true, closedReason: '오후반휴' }],
+            '금': [{ deptKey: 'cardio', name: '신제욱', chipClass: 'chip-cardio' }]
           }
         },
         daily: {}
       };
     }
 
-    // 실행 시작
     fetchScheduleData();
   </script>
 </body>
