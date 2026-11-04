@@ -2,50 +2,127 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>건대외래일정</title>
   <link rel="icon" type="image/png" href="/icon.png">
   <link rel="apple-touch-icon" href="/icon.png">
   <link rel="manifest" href="/manifest.json">
-  <!-- 모바일 웹앱 전체화면 모드 (주소창 숨기기 및 앱 스타일) -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="건대외래일정">
-  <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#ffffff">
-  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
-  <style>
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-thumb { background: rgba(150, 150, 150, 0.3); border-radius: 3px; }
-    
-    /* 과별 고유 색상 칩 규격 */
-    .chip-neuro   { background-color: #f3e8ff; color: #6b21a8; border: 1px solid #d8b4fe; } /* 신경과: 보라 */
-    .chip-endo    { background-color: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; } /* 내분비: 주황 */
-    .chip-cardio  { background-color: #ffe4e6; color: #be123c; border: 1px solid #fecdd3; } /* 심혈관: 로즈 */
-    .chip-nephro  { background-color: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; } /* 신장: 하늘 */
 
-    .chip-onco    { background-color: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; } /* 종양혈액: 파랑 */
-    .chip-pulmo   { background-color: #ccfbf1; color: #0f766e; border: 1px solid #99f6e4; } /* 호흡기: 틸 */
-    .chip-rheum   { background-color: #fce7f3; color: #be185d; border: 1px solid #fbcfe8; } /* 류마티스: 핑크 */
-    .chip-ortho   { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; } /* 정형외과: 에메랄드 */
-    .chip-ns      { background-color: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; } /* 신경외과: 인디고 */
-    .chip-gi      { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; } /* 소화기: 앰버 */
-    .chip-cs      { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; } /* 흉부외과: 빨강 */
+  <!-- 웹폰트: Pretendard for crisp high-density Korean typography -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+
+  <style>
+    :root {
+      --font-sans: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      --bg-stage: #f8fafc;
+      --card-bg: #ffffff;
+      --card-border: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --accent-blue: #2563eb;
+    }
+
+    * {
+      font-family: var(--font-sans);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: linear-gradient(180deg, #f1f5f9 0%, #f8fafc 180px);
+      color: var(--text-main);
+      letter-spacing: -0.015em;
+    }
+
+    /* Stageshow Quiet Scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.35); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.6); }
+
+    /* Frosted Glass Toolbar */
+    .stageshow-glass {
+      background: rgba(255, 255, 255, 0.86);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(226, 232, 240, 0.85);
+    }
+
+    /* 카드 입체감 & 부드러운 그림자 */
+    .stageshow-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .stageshow-card:hover {
+      box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
+    }
+
+    /* 숫자 카운터 규격 */
+    .num-counter {
+      font-variant-numeric: tabular-nums;
+      display: inline-block;
+      font-weight: 800;
+    }
+
+    /* 과별 고유 색상 칩 규격 (Stageshow 정제 버전) */
+    .chip-item {
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+    .chip-item:hover {
+      transform: translateY(-1px);
+    }
+
+    .chip-neuro   { background-color: #faf5ff; color: #6b21a8; border: 1px solid #e9d5ff; }
+    .chip-endo    { background-color: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
+    .chip-cardio  { background-color: #fff1f2; color: #be123c; border: 1px solid #ffe4e6; }
+    .chip-nephro  { background-color: #f0f9ff; color: #0369a1; border: 1px solid #e0f2fe; }
+
+    .chip-onco    { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
+    .chip-pulmo   { background-color: #f0fdfa; color: #0f766e; border: 1px solid #ccfbf1; }
+    .chip-rheum   { background-color: #fdf2f8; color: #be185d; border: 1px solid #fce7f3; }
+    .chip-ortho   { background-color: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
+    .chip-ns      { background-color: #eef2ff; color: #4338ca; border: 1px solid #e0e7ff; }
+    .chip-gi      { background-color: #fefce8; color: #b45309; border: 1px solid #fef9c3; }
+    .chip-cs      { background-color: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; }
 
     .chip-pain, .chip-uro, .chip-oph, .chip-ent, .chip-derma, 
     .chip-psych, .chip-fm, .chip-gs, .chip-obgy, .chip-pedia, .chip-rm, .chip-inf {
-      background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;
+      background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;
     }
 
     .chip-closed {
       text-decoration: line-through;
-      opacity: 0.45;
+      opacity: 0.5;
       background-color: #f8fafc !important;
       color: #94a3b8 !important;
       border-color: #e2e8f0 !important;
     }
 
-    /* A4 1장 가로 인쇄 최적화 */
+    /* 터치 제스처 슬라이드 애니메이션 */
+    .swipe-container {
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+    }
+    .swipe-anim-left {
+      animation: slideLeft 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .swipe-anim-right {
+      animation: slideRight 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes slideLeft {
+      0% { transform: translateX(18px); opacity: 0.6; }
+      100% { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideRight {
+      0% { transform: translateX(-18px); opacity: 0.6; }
+      100% { transform: translateX(0); opacity: 1; }
+    }
+
+    /* A4 가로 인쇄 */
     @media print {
       body { padding: 0 !important; background: white !important; color: black !important; font-size: 8.5pt !important; }
       .no-print { display: none !important; }
@@ -57,276 +134,343 @@
     }
   </style>
 </head>
-<body class="bg-[var(--card)] text-[var(--foreground)] antialiased p-2.5 sm:p-5 min-h-screen flex flex-col justify-between">
+<body class="min-h-screen flex flex-col justify-between antialiased selection:bg-blue-100 selection:text-blue-900">
 
-  <!-- TOP CONTENT WRAPPER -->
+  <!-- TOP WRAPPER -->
   <div>
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[var(--border)] gap-2">
-      <div>
-        <div class="flex items-center gap-2">
-          <img src="/icon.png" alt="KUH" class="w-8 h-8 rounded-lg shadow-sm border border-[var(--border)] object-cover">
-          <h1 class="text-lg sm:text-xl font-black text-[var(--foreground)] tracking-tight">건대외래일정</h1>
-        </div>
-      </div>
 
-      <!-- Action Buttons & Tabs -->
-      <div class="flex items-center gap-1.5 no-print flex-wrap">
-        <button onclick="window.print()" class="hidden sm:flex px-2.5 py-1 text-xs font-semibold rounded-lg border border-[var(--border)] bg-[var(--background)] hover:bg-[var(--border)] transition-all items-center gap-1">
-          <span>🖨️ A4 인쇄</span>
-        </button>
-        <div class="bg-[var(--background)] p-1 rounded-lg border border-[var(--border)] flex text-xs w-full sm:w-auto justify-center">
-          <button id="tabWeekly" onclick="switchView('weekly')" class="flex-1 sm:flex-none px-3 py-1 rounded-md font-bold bg-blue-600 text-white transition-all shadow-sm">
-            주간 일정표
-          </button>
-          <button id="tabDaily" onclick="switchView('daily')" class="flex-1 sm:flex-none px-3 py-1 rounded-md font-semibold text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all">
-            📅 특정 날짜 출근부
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- TIERED FILTER PANEL (no-print) -->
-    <div class="my-2.5 sm:my-3 p-3 sm:p-3.5 rounded-xl bg-[var(--background)] border border-[var(--border)] space-y-2.5 text-xs no-print shadow-sm">
-      <div class="flex items-center justify-between pb-2 border-b border-[var(--border)] flex-wrap gap-2">
-        <span class="font-bold text-[var(--foreground)] flex items-center gap-1.5 text-xs sm:text-sm">
-          <span>🔍 진료과 필터</span>
-        </span>
-        <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-          <button onclick="toggleTierFilter('tier1')" id="btnTier1" class="px-3.5 sm:px-4 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all border shadow-sm">
-            Tier 1
-          </button>
-          <button onclick="toggleTierFilter('tier2')" id="btnTier2" class="px-3.5 sm:px-4 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all border shadow-sm">
-            Tier 2
-          </button>
-          <button onclick="toggleTierFilter('tier3')" id="btnTier3" class="px-3.5 sm:px-4 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all border shadow-sm">
-            Tier 3
-          </button>
-          <button onclick="resetFilters()" id="btnReset" class="px-3 sm:px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-[var(--muted-foreground)] hover:text-[var(--foreground)] border border-[var(--border)] hover:bg-[var(--card)] transition-all">
-            초기화
-          </button>
-        </div>
-      </div>
-
-      <!-- Tier 1 -->
-      <div class="flex items-start gap-1.5 sm:gap-2">
-        <div class="w-16 sm:w-20 shrink-0 pt-0.5">
-          <span class="font-bold text-purple-700 text-xs sm:text-sm">Tier 1</span>
-        </div>
-        <div class="flex flex-wrap gap-1">
-          <button onclick="toggleDept('neuro')" id="flt-neuro" class="px-2 py-0.5 rounded font-semibold chip-neuro text-xs">✓ 신경과</button>
-          <button onclick="toggleDept('endo')" id="flt-endo" class="px-2 py-0.5 rounded font-semibold chip-endo text-xs">✓ 내분비내과</button>
-          <button onclick="toggleDept('cardio')" id="flt-cardio" class="px-2 py-0.5 rounded font-semibold chip-cardio text-xs">✓ 심장혈관내과</button>
-          <button onclick="toggleDept('nephro')" id="flt-nephro" class="px-2 py-0.5 rounded font-semibold chip-nephro text-xs">✓ 신장내과</button>
-        </div>
-      </div>
-
-      <!-- Tier 2 -->
-      <div class="flex items-start gap-1.5 sm:gap-2 pt-1.5 border-t border-[var(--border)]/60">
-        <div class="w-16 sm:w-20 shrink-0 pt-0.5">
-          <span class="font-bold text-sky-700 text-xs sm:text-sm">Tier 2</span>
-        </div>
-        <div class="flex flex-wrap gap-1">
-          <button onclick="toggleDept('onco')" id="flt-onco" class="px-2 py-0.5 rounded font-semibold chip-onco opacity-30 grayscale text-xs">+ 종양혈액</button>
-          <button onclick="toggleDept('pulmo')" id="flt-pulmo" class="px-2 py-0.5 rounded font-semibold chip-pulmo opacity-30 grayscale text-xs">+ 호흡기</button>
-          <button onclick="toggleDept('rheum')" id="flt-rheum" class="px-2 py-0.5 rounded font-semibold chip-rheum opacity-30 grayscale text-xs">+ 류마티스</button>
-          <button onclick="toggleDept('ortho')" id="flt-ortho" class="px-2 py-0.5 rounded font-semibold chip-ortho opacity-30 grayscale text-xs">+ 정형외과</button>
-          <button onclick="toggleDept('ns')" id="flt-ns" class="px-2 py-0.5 rounded font-semibold chip-ns opacity-30 grayscale text-xs">+ 신경외과</button>
-          <button onclick="toggleDept('gi')" id="flt-gi" class="px-2 py-0.5 rounded font-semibold chip-gi opacity-30 grayscale text-xs">+ 소화기</button>
-          <button onclick="toggleDept('cs')" id="flt-cs" class="px-2 py-0.5 rounded font-semibold chip-cs opacity-30 grayscale text-xs">+ 흉부외과</button>
-        </div>
-      </div>
-
-      <!-- Tier 3 -->
-      <div class="flex items-start gap-1.5 sm:gap-2 pt-1.5 border-t border-[var(--border)]/60">
-        <div class="w-16 sm:w-20 shrink-0 pt-0.5">
-          <span class="font-bold text-slate-500 text-xs sm:text-sm">Tier 3</span>
-        </div>
-        <div class="flex flex-wrap gap-1">
-          <button onclick="toggleDept('pain')" id="flt-pain" class="px-2 py-0.5 rounded font-semibold chip-pain opacity-30 grayscale text-xs">+ 통증</button>
-          <button onclick="toggleDept('uro')" id="flt-uro" class="px-2 py-0.5 rounded font-semibold chip-uro opacity-30 grayscale text-xs">+ 비뇨</button>
-          <button onclick="toggleDept('oph')" id="flt-oph" class="px-2 py-0.5 rounded font-semibold chip-oph opacity-30 grayscale text-xs">+ 안과</button>
-          <button onclick="toggleDept('ent')" id="flt-ent" class="px-2 py-0.5 rounded font-semibold chip-ent opacity-30 grayscale text-xs">+ 이비인후</button>
-          <button onclick="toggleDept('derma')" id="flt-derma" class="px-2 py-0.5 rounded font-semibold chip-derma opacity-30 grayscale text-xs">+ 피부</button>
-          <button onclick="toggleDept('psych')" id="flt-psych" class="px-2 py-0.5 rounded font-semibold chip-psych opacity-30 grayscale text-xs">+ 정신</button>
-          <button onclick="toggleDept('fm')" id="flt-fm" class="px-2 py-0.5 rounded font-semibold chip-fm opacity-30 grayscale text-xs">+ 가정</button>
-          <button onclick="toggleDept('gs')" id="flt-gs" class="px-2 py-0.5 rounded font-semibold chip-gs opacity-30 grayscale text-xs">+ 외과</button>
-          <button onclick="toggleDept('obgy')" id="flt-obgy" class="px-2 py-0.5 rounded font-semibold chip-obgy opacity-30 grayscale text-xs">+ 산부인과</button>
-          <button onclick="toggleDept('pedia')" id="flt-pedia" class="px-2 py-0.5 rounded font-semibold chip-pedia opacity-30 grayscale text-xs">+ 소아</button>
-          <button onclick="toggleDept('rm')" id="flt-rm" class="px-2 py-0.5 rounded font-semibold chip-rm opacity-30 grayscale text-xs">+ 재활</button>
-          <button onclick="toggleDept('inf')" id="flt-inf" class="px-2 py-0.5 rounded font-semibold chip-inf opacity-30 grayscale text-xs">+ 감염</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- VIEW 1: WEEKLY VIEW (HYBRID: Desktop Table + Mobile Day-Card) -->
-    <div id="viewWeekly" class="space-y-3">
-      
-      <!-- Week Switcher (이번주 / 다음주 미리보기) -->
-      <div class="flex items-center justify-between pb-1 flex-wrap gap-2 no-print">
-        <div class="inline-flex bg-[var(--background)] p-1 rounded-xl border border-[var(--border)] text-xs shadow-sm w-full sm:w-auto">
-          <button onclick="switchWeekOffset(0)" id="btnWeekThis" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-bold bg-blue-600 text-white shadow-sm transition-all text-xs sm:text-sm">
-            이번주 (<span id="labelThisWeek">11/2 - 11/6</span>)
-          </button>
-          <button onclick="switchWeekOffset(1)" id="btnWeekNext" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all text-xs sm:text-sm">
-            🔮 다음주 미리보기 (<span id="labelNextWeek">11/9 - 11/13</span>)
-          </button>
-        </div>
-        <div id="weekStatusBadge" class="hidden sm:flex items-center">
-          <span class="px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-600 font-bold text-xs">
-            ● 이번주 외래 진료 일정
-          </span>
-        </div>
-      </div>
-
-      <!-- 1-A: MOBILE EXCLUSIVE DAY-PICKER CARD VIEW (< sm 화면) -->
-      <div id="viewWeeklyMobile" class="block sm:hidden space-y-2.5">
-        <!-- Day Selector Tabs (월 | 화 | 수 | 목[오늘] | 금) -->
-        <div class="grid grid-cols-5 gap-1 bg-[var(--background)] p-1 rounded-xl border border-[var(--border)] text-center text-xs font-semibold">
-          <button onclick="selectMobileDay('월')" id="mTab-월" class="py-1.5 rounded-lg transition-all">월</button>
-          <button onclick="selectMobileDay('화')" id="mTab-화" class="py-1.5 rounded-lg transition-all">화</button>
-          <button onclick="selectMobileDay('수')" id="mTab-수" class="py-1.5 rounded-lg transition-all">수</button>
-          <button onclick="selectMobileDay('목')" id="mTab-목" class="py-1.5 rounded-lg transition-all">목</button>
-          <button onclick="selectMobileDay('금')" id="mTab-금" class="py-1.5 rounded-lg transition-all">금</button>
-        </div>
-
-        <!-- Selected Day Schedule Card -->
-        <div class="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--background)] shadow-sm space-y-3">
-          <div class="flex items-center justify-between pb-2 border-b border-[var(--border)]">
-            <span class="font-bold text-sm text-[var(--foreground)]" id="mCardTitle">오늘 외래 일정</span>
-            <span class="text-[10px] text-blue-600 font-semibold cursor-pointer" onclick="switchView('daily')">전체 명단 보기 →</span>
+<!-- HEADER / NAVIGATION (Stageshow Frosted Chrome) -->
+    <header class="stageshow-glass sticky top-0 z-30 px-3 sm:px-6 py-2.5 transition-all">
+      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        
+        <!-- Brand & Title -->
+        <div class="flex items-center gap-2.5">
+          <div class="relative">
+            <img src="/icon.png" alt="KUH" class="w-8 h-8 rounded-lg shadow-sm border border-slate-200/80 object-cover">
+            <span class="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-600 rounded-full border-2 border-white flex items-center justify-center">
+              <span class="w-1 h-1 bg-white rounded-full"></span>
+            </span>
           </div>
-
-          <!-- AM Block -->
-          <div class="space-y-1.5">
-            <div class="flex items-center gap-1.5 text-xs font-bold text-amber-600">
-              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-              <span>오전 (09:00 - 12:30)</span>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-base sm:text-lg font-black tracking-tight text-slate-900">건대외래일정</h1>
+              <span class="px-1.5 py-0.5 text-[10px] rounded-md bg-blue-50 text-blue-700 font-bold border border-blue-200/60">외래 부하 예측</span>
             </div>
-            <div id="mAmList" class="p-2.5 rounded-lg bg-[var(--card)] border border-[var(--border)]"></div>
-          </div>
-
-          <!-- PM Block -->
-          <div class="space-y-1.5 pt-1 border-t border-[var(--border)]/60">
-            <div class="flex items-center gap-1.5 text-xs font-bold text-blue-600">
-              <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-              <span>오후 (13:30 - 17:00)</span>
-            </div>
-            <div id="mPmList" class="p-2.5 rounded-lg bg-[var(--card)] border border-[var(--border)]"></div>
+            <p class="text-[11px] text-slate-500 font-medium">외래 진료 스케줄 및 의사 출근 현황</p>
           </div>
         </div>
-      </div>
 
-      <!-- 1-B: DESKTOP TABLE VIEW (≥ sm 화면) -->
-      <div id="viewWeeklyTable" class="hidden sm:block rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--background)] shadow-sm">
-        <div class="p-2.5 bg-[var(--card)] border-b border-[var(--border)] flex items-center justify-between text-xs">
+        <!-- Action Controls -->
+        <div class="flex items-center gap-2 no-print flex-wrap">
+          <!-- A4 Print -->
+          <button onclick="window.print()" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-sm transition-all active:scale-95">
+            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+            <span>A4 인쇄</span>
+          </button>
+
+          <!-- Segmented View Switcher (주간 vs 특정 날짜) -->
+          <div class="inline-flex bg-slate-100 p-0.5 rounded-lg border border-slate-200/80 text-xs w-full sm:w-auto shadow-inner">
+            <button id="tabWeekly" onclick="switchView('weekly')" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-md font-bold bg-white text-blue-600 shadow-sm transition-all">
+              주간 일정표
+            </button>
+            <button id="tabDaily" onclick="switchView('daily')" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-md font-semibold text-slate-600 hover:text-slate-900 transition-all">
+              📅 특정 날짜
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- MAIN BODY CONTAINER -->
+    <main class="max-w-7xl mx-auto p-2.5 sm:p-5 space-y-3.5">
+
+      <!-- TIERED FILTER BAR (Quiet Restraint Redesign) -->
+      <section class="stageshow-card rounded-2xl p-3 sm:p-4 text-xs no-print">
+        <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 flex-wrap gap-2">
           <div class="flex items-center gap-2">
-            <span class="font-bold text-[var(--foreground)]" id="weekRangeTitle">2026년 11월 1주차 외래 일정</span>
-            <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600 font-semibold">Today 하이라이트 & 티어별 점선 분할</span>
+            <span class="inline-flex items-center justify-center w-5 h-5 rounded-md bg-slate-100 text-slate-600 font-bold text-xs">⚡</span>
+            <span class="font-bold text-slate-800 text-xs sm:text-sm">진료과 필터</span>
+            <span class="text-[11px] text-slate-400 font-normal hidden sm:inline">원하는 티어를 누르면 일괄 토글됩니다</span>
           </div>
-          <span class="text-[var(--muted-foreground)] no-print">요일 헤더를 클릭하면 해당 일의 전체 출근부로 이동합니다.</span>
+
+          <!-- Quick Tier Toggle Pills -->
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <button onclick="toggleTierFilter('tier1')" id="btnTier1" class="px-3 py-1 rounded-lg font-bold text-xs transition-all border shadow-xs bg-purple-600 text-white border-purple-600 ring-2 ring-purple-600/20 active:scale-95">
+              Tier 1
+            </button>
+            <button onclick="toggleTierFilter('tier2')" id="btnTier2" class="px-3 py-1 rounded-lg font-bold text-xs transition-all border shadow-xs bg-white text-sky-700 border-sky-200 hover:bg-sky-50 active:scale-95">
+              Tier 2
+            </button>
+            <button onclick="toggleTierFilter('tier3')" id="btnTier3" class="px-3 py-1 rounded-lg font-bold text-xs transition-all border shadow-xs bg-white text-slate-700 border-slate-200 hover:bg-slate-50 active:scale-95">
+              Tier 3
+            </button>
+            <button onclick="resetFilters()" id="btnReset" class="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 border border-slate-200 hover:bg-slate-100 transition-all active:scale-95">
+              전체 해제
+            </button>
+          </div>
         </div>
 
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="border-b border-[var(--border)] bg-[var(--card)]/50 text-xs text-[var(--muted-foreground)]" id="weeklyThead">
-                <th class="p-2.5 w-16 text-center font-semibold">시간</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-[var(--border)] text-xs">
-              <tr class="hover:bg-[var(--card)]/30">
-                <td class="p-2.5 text-center font-bold bg-[var(--card)]/40 text-[var(--foreground)]">
-                  <div>오전</div>
-                  <div class="text-[10px] text-[var(--muted-foreground)] font-normal">09:00 - 12:30</div>
-                </td>
-                <td id="cell-AM-0" class="p-2 align-top border-l border-[var(--border)]"></td>
-                <td id="cell-AM-1" class="p-2 align-top border-l border-[var(--border)]"></td>
-                <td id="cell-AM-2" class="p-2 align-top border-l border-[var(--border)]"></td>
-                <td id="cell-AM-3" class="p-2 align-top border-l border-[var(--border)]"></td>
-                <td id="cell-AM-4" class="p-2 align-top border-l border-[var(--border)]"></td>
-              </tr>
-              <tr class="hover:bg-[var(--card)]/30">
-                <td class="p-2.5 text-center font-bold bg-[var(--card)]/40 text-[var(--foreground)]">
-                  <div>오후</div>
-                  <div class="text-[10px] text-[var(--muted-foreground)] font-normal">13:30 - 17:00</div>
-                </td>
-                <td id="cell-PM-0" class="p-2 align-top border-l border-[var(--border)]"></td>
-                <td id="cell-PM-1" class="p-2 align-top border-l border-[var(--border)]"></td>
-                <td id="cell-PM-2" class="p-2 align-top border-l border-[var(--border)]"></td>
-                <td id="cell-PM-3" class="p-2 align-top border-l border-[var(--border)]"></td>
-                <td id="cell-PM-4" class="p-2 align-top border-l border-[var(--border)]"></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- VIEW 2: DAILY DRILLDOWN VIEW -->
-    <div id="viewDaily" class="hidden rounded-xl border border-[var(--border)] bg-[var(--background)] p-3 sm:p-4 shadow-sm">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[var(--border)] gap-2 mb-3">
-        <div class="flex items-center gap-2">
-          <span class="text-xs sm:text-sm font-bold">📅 특정 날짜 전체 출근부</span>
-          <select id="dailyDatePicker" onchange="renderDailyView(this.value)" class="text-xs p-1.5 rounded-lg border border-[var(--border)] bg-[var(--card)] font-bold text-blue-600">
-          </select>
-        </div>
-
-        <div class="flex items-center gap-2 no-print">
-          <input type="text" id="dailySearch" placeholder="교수명 또는 진료과 검색..." oninput="filterDailyList(this.value)" class="text-xs px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--card)] flex-1 sm:w-48">
-          <button onclick="switchView('weekly')" class="text-xs px-2.5 py-1.5 rounded-lg bg-[var(--card)] border border-[var(--border)] font-semibold hover:bg-[var(--border)] shrink-0">
-            ← 주간 복귀
-          </button>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-        <!-- AM List -->
-        <div class="p-3 sm:p-3.5 rounded-xl border border-[var(--border)] bg-[var(--card)]">
-          <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-[var(--border)]">
-            <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-              <span class="font-bold text-xs sm:text-sm">오전 외래 (09:00 - 12:30)</span>
+        <div class="pt-2.5 space-y-2">
+          <!-- Tier 1 Group -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="w-14 sm:w-16 font-extrabold text-purple-700 text-xs sm:text-sm shrink-0">Tier 1</span>
+            <div class="flex flex-wrap gap-1">
+              <button onclick="toggleDept('neuro')" id="flt-neuro" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-neuro text-xs">✓ 신경과</button>
+              <button onclick="toggleDept('endo')" id="flt-endo" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-endo text-xs">✓ 내분비내과</button>
+              <button onclick="toggleDept('cardio')" id="flt-cardio" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-cardio text-xs">✓ 심장혈관내과</button>
+              <button onclick="toggleDept('nephro')" id="flt-nephro" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-nephro text-xs">✓ 신장내과</button>
             </div>
-            <span id="amCountBadge" class="text-xs px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 font-bold">0명</span>
           </div>
-          <div id="amDoctorList" class="space-y-2"></div>
-        </div>
-        <!-- PM List -->
-        <div class="p-3 sm:p-3.5 rounded-xl border border-[var(--border)] bg-[var(--card)]">
-          <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-[var(--border)]">
-            <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-              <span class="font-bold text-xs sm:text-sm">오후 외래 (13:30 - 17:00)</span>
+
+          <!-- Tier 2 Group -->
+          <div class="flex items-center gap-2 flex-wrap pt-2 border-t border-slate-100">
+            <span class="w-14 sm:w-16 font-extrabold text-sky-700 text-xs sm:text-sm shrink-0">Tier 2</span>
+            <div class="flex flex-wrap gap-1">
+              <button onclick="toggleDept('onco')" id="flt-onco" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-onco opacity-30 grayscale text-xs">+ 종양혈액</button>
+              <button onclick="toggleDept('pulmo')" id="flt-pulmo" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-pulmo opacity-30 grayscale text-xs">+ 호흡기</button>
+              <button onclick="toggleDept('rheum')" id="flt-rheum" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-rheum opacity-30 grayscale text-xs">+ 류마티스</button>
+              <button onclick="toggleDept('ortho')" id="flt-ortho" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-ortho opacity-30 grayscale text-xs">+ 정형외과</button>
+              <button onclick="toggleDept('ns')" id="flt-ns" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-ns opacity-30 grayscale text-xs">+ 신경외과</button>
+              <button onclick="toggleDept('gi')" id="flt-gi" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-gi opacity-30 grayscale text-xs">+ 소화기</button>
+              <button onclick="toggleDept('cs')" id="flt-cs" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-cs opacity-30 grayscale text-xs">+ 흉부외과</button>
             </div>
-            <span id="pmCountBadge" class="text-xs px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 font-bold">0명</span>
           </div>
-          <div id="pmDoctorList" class="space-y-2"></div>
+
+          <!-- Tier 3 Group -->
+          <div class="flex items-center gap-2 flex-wrap pt-2 border-t border-slate-100">
+            <span class="w-14 sm:w-16 font-extrabold text-slate-500 text-xs sm:text-sm shrink-0">Tier 3</span>
+            <div class="flex flex-wrap gap-1">
+              <button onclick="toggleDept('pain')" id="flt-pain" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-pain opacity-30 grayscale text-xs">+ 통증</button>
+              <button onclick="toggleDept('uro')" id="flt-uro" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-uro opacity-30 grayscale text-xs">+ 비뇨</button>
+              <button onclick="toggleDept('oph')" id="flt-oph" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-oph opacity-30 grayscale text-xs">+ 안과</button>
+              <button onclick="toggleDept('ent')" id="flt-ent" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-ent opacity-30 grayscale text-xs">+ 이비인후</button>
+              <button onclick="toggleDept('derma')" id="flt-derma" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-derma opacity-30 grayscale text-xs">+ 피부</button>
+              <button onclick="toggleDept('psych')" id="flt-psych" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-psych opacity-30 grayscale text-xs">+ 정신</button>
+              <button onclick="toggleDept('fm')" id="flt-fm" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-fm opacity-30 grayscale text-xs">+ 가정</button>
+              <button onclick="toggleDept('gs')" id="flt-gs" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-gs opacity-30 grayscale text-xs">+ 외과</button>
+              <button onclick="toggleDept('obgy')" id="flt-obgy" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-obgy opacity-30 grayscale text-xs">+ 산부인과</button>
+              <button onclick="toggleDept('pedia')" id="flt-pedia" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-pedia opacity-30 grayscale text-xs">+ 소아</button>
+              <button onclick="toggleDept('rm')" id="flt-rm" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-rm opacity-30 grayscale text-xs">+ 재활</button>
+              <button onclick="toggleDept('inf')" id="flt-inf" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-inf opacity-30 grayscale text-xs">+ 감염</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 1: WEEKLY VIEW -->
+      <div id="viewWeekly" class="space-y-3">
+        
+        <!-- Week Controls & Summary Metrics -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-1 gap-2.5 no-print">
+          
+          <!-- This Week / Next Week Switcher -->
+          <div class="inline-flex bg-slate-200/80 p-0.5 rounded-xl border border-slate-300/60 text-xs w-full sm:w-auto shadow-inner">
+            <button onclick="switchWeekOffset(0)" id="btnWeekThis" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-bold bg-blue-600 text-white shadow-sm transition-all text-xs">
+              이번주 (<span id="labelThisWeek">11/2 - 11/6</span>)
+            </button>
+            <button onclick="switchWeekOffset(1)" id="btnWeekNext" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:text-slate-900 transition-all text-xs">
+              🔮 다음주 미리보기 (<span id="labelNextWeek">11/9 - 11/13</span>)
+            </button>
+          </div>
+
+          <!-- Stageshow Summary Bar (팩트 중심 정갈한 상태바) -->
+          <div class="flex items-center gap-3 bg-white px-3.5 py-1.5 rounded-xl border border-slate-200/80 shadow-xs flex-wrap">
+            
+            <!-- 필터 진료의 수 -->
+            <div class="flex items-center gap-1.5 text-xs">
+              <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+              <span class="font-bold text-slate-700">선택 진료의</span>
+              <span class="font-black text-blue-600 text-sm ml-0.5">
+                <span id="activeTotalRolling" class="num-counter">0</span>명
+              </span>
+            </div>
+
+            <div class="h-3 w-px bg-slate-200 hidden sm:block"></div>
+
+            <!-- 오늘 건대병원 전체 외래 현황 (병원 전체 고정 팩트) -->
+            <div class="flex items-center gap-2 text-xs">
+              <span class="text-slate-500 font-medium">오늘(<span id="todayDayBadge">목</span>) 전체 외래:</span>
+              <span class="font-bold text-slate-800">
+                오전 <span id="todayAmCount" class="text-amber-600 num-counter">0</span>명 · 
+                오후 <span id="todayPmCount" class="text-blue-600 num-counter">0</span>명
+              </span>
+              <span id="todayClosedBadge" class="text-[10px] px-1.5 py-0.5 rounded-md bg-rose-50 text-rose-600 border border-rose-200 font-bold hidden">
+                휴진 0명
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1-A: MOBILE DAY-CARD VIEW (< sm) WITH TOUCH SWIPE -->
+        <div id="viewWeeklyMobile" class="block sm:hidden space-y-2.5">
+          <!-- Day Selector Bar -->
+          <div class="grid grid-cols-5 gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-xs text-center text-xs font-semibold">
+            <button onclick="selectMobileDay('월')" id="mTab-월" class="py-1.5 rounded-lg transition-all">월</button>
+            <button onclick="selectMobileDay('화')" id="mTab-화" class="py-1.5 rounded-lg transition-all">화</button>
+            <button onclick="selectMobileDay('수')" id="mTab-수" class="py-1.5 rounded-lg transition-all">수</button>
+            <button onclick="selectMobileDay('목')" id="mTab-목" class="py-1.5 rounded-lg transition-all">목</button>
+            <button onclick="selectMobileDay('금')" id="mTab-금" class="py-1.5 rounded-lg transition-all">금</button>
+          </div>
+
+          <!-- Swipable Day Schedule Card -->
+          <div id="mobileCardContainer" class="stageshow-card rounded-2xl p-4 shadow-sm space-y-3.5 swipe-container relative">
+            <div class="flex items-center justify-between pb-2.5 border-b border-slate-100">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+                <span class="font-extrabold text-sm text-slate-900" id="mCardTitle">오늘 외래 일정</span>
+              </div>
+              <button onclick="switchView('daily')" class="text-[11px] text-blue-600 font-bold hover:underline">
+                전체 명단 보기 →
+              </button>
+            </div>
+
+            <!-- Morning Block -->
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between text-xs font-bold text-amber-600">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                  <span>오전 (09:00 - 12:30)</span>
+                </div>
+                <span id="mAmCountBadge" class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60">0명</span>
+              </div>
+              <div id="mAmList" class="p-3 rounded-xl bg-slate-50/80 border border-slate-100 min-h-[50px]"></div>
+            </div>
+
+            <!-- Afternoon Block -->
+            <div class="space-y-1.5 pt-2 border-t border-slate-100">
+              <div class="flex items-center justify-between text-xs font-bold text-blue-600">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                  <span>오후 (13:30 - 17:00)</span>
+                </div>
+                <span id="mPmCountBadge" class="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/60">0명</span>
+              </div>
+              <div id="mPmList" class="p-3 rounded-xl bg-slate-50/80 border border-slate-100 min-h-[50px]"></div>
+            </div>
+
+            <div class="text-center text-[10px] text-slate-400 font-medium pt-1">
+              👈 좌우로 스와이프하여 다른 요일 확인 👉
+            </div>
+          </div>
+        </div>
+
+        <!-- 1-B: DESKTOP TABLE VIEW (≥ sm) -->
+        <div id="viewWeeklyTable" class="hidden sm:block stageshow-card rounded-2xl overflow-hidden shadow-sm">
+          <div class="px-4 py-3 bg-slate-50/90 border-b border-slate-200/80 flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-800 text-sm tracking-tight" id="weekRangeTitle">이번주 외래 출근부</span>
+            <span class="text-[11px] text-slate-400 font-medium">월 - 금 주간 스케줄</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-200/80 bg-white text-xs text-slate-500" id="weeklyThead">
+                  <th class="p-3 w-20 text-center font-bold">시간</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200/80 text-xs bg-white">
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                  <td class="p-3 text-center font-bold bg-slate-50/60 text-slate-800">
+                    <div class="text-xs text-amber-700">오전</div>
+                    <div class="text-[10px] text-slate-400 font-normal">09:00 - 12:30</div>
+                  </td>
+                  <td id="cell-AM-0" class="p-2.5 align-top border-l border-slate-200/80"></td>
+                  <td id="cell-AM-1" class="p-2.5 align-top border-l border-slate-200/80"></td>
+                  <td id="cell-AM-2" class="p-2.5 align-top border-l border-slate-200/80"></td>
+                  <td id="cell-AM-3" class="p-2.5 align-top border-l border-slate-200/80"></td>
+                  <td id="cell-AM-4" class="p-2.5 align-top border-l border-slate-200/80"></td>
+                </tr>
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                  <td class="p-3 text-center font-bold bg-slate-50/60 text-slate-800">
+                    <div class="text-xs text-blue-700">오후</div>
+                    <div class="text-[10px] text-slate-400 font-normal">13:30 - 17:00</div>
+                  </td>
+                  <td id="cell-PM-0" class="p-2.5 align-top border-l border-slate-200/80"></td>
+                  <td id="cell-PM-1" class="p-2.5 align-top border-l border-slate-200/80"></td>
+                  <td id="cell-PM-2" class="p-2.5 align-top border-l border-slate-200/80"></td>
+                  <td id="cell-PM-3" class="p-2.5 align-top border-l border-slate-200/80"></td>
+                  <td id="cell-PM-4" class="p-2.5 align-top border-l border-slate-200/80"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- VIEW 2: DAILY DRILLDOWN VIEW -->
+      <div id="viewDaily" class="hidden stageshow-card rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-slate-100 gap-3">
+          <div class="flex items-center gap-2.5">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-blue-50 text-blue-600 font-bold text-xs">📅</span>
+            <span class="text-xs sm:text-sm font-bold text-slate-800">특정 날짜 전체 출근부</span>
+            <select id="dailyDatePicker" onchange="renderDailyView(this.value)" class="text-xs p-1.5 rounded-lg border border-slate-200 bg-white font-bold text-blue-600 shadow-xs focus:ring-2 focus:ring-blue-500/20 outline-none">
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2 no-print">
+            <input type="text" id="dailySearch" placeholder="교수명 또는 진료과 검색..." oninput="filterDailyList(this.value)" class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none flex-1 sm:w-52 transition-all">
+            <button onclick="switchView('weekly')" class="text-xs px-3 py-1.5 rounded-lg bg-white border border-slate-200 font-bold text-slate-700 hover:bg-slate-50 shadow-xs shrink-0 transition-all active:scale-95">
+              ← 주간 복귀
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- AM Column -->
+          <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/60 space-y-3">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-200/80">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                <span class="font-extrabold text-xs sm:text-sm text-slate-800">오전 외래 (09:00 - 12:30)</span>
+              </div>
+              <span id="amCountBadge" class="text-xs px-2.5 py-0.5 rounded-md bg-amber-500/10 text-amber-700 font-black border border-amber-500/20">
+                <span id="amCountRolling" class="num-counter">0</span>명
+              </span>
+            </div>
+            <div id="amDoctorList" class="space-y-2"></div>
+          </div>
+
+          <!-- PM Column -->
+          <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/60 space-y-3">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-200/80">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                <span class="font-extrabold text-xs sm:text-sm text-slate-800">오후 외래 (13:30 - 17:00)</span>
+              </div>
+              <span id="pmCountBadge" class="text-xs px-2.5 py-0.5 rounded-md bg-blue-500/10 text-blue-700 font-black border border-blue-500/20">
+                <span id="pmCountRolling" class="num-counter">0</span>명
+              </span>
+            </div>
+            <div id="pmDoctorList" class="space-y-2"></div>
+          </div>
         </div>
       </div>
-    </div>
+
+    </main>
   </div>
 
   <!-- FOOTER -->
-  <footer class="mt-5 pt-3 border-t border-[var(--border)] flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] sm:text-xs text-[var(--muted-foreground)]">
-    <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-center sm:justify-start">
-      <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
-      <span id="updatedAtText">데이터 최신화: 로딩 중...</span>
-      <span class="text-slate-400">·</span>
+  <footer class="mt-8 pt-4 pb-6 border-t border-slate-200/80 text-[11px] sm:text-xs text-slate-500 max-w-7xl mx-auto px-4 w-full flex flex-col sm:flex-row items-center justify-between gap-2.5">
+    <div class="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
+      <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+      <span id="updatedAtText" class="font-medium text-slate-600">데이터 최신화: 로딩 중...</span>
+      <span class="text-slate-300">·</span>
       <span>건국대학교병원 외래 기준</span>
-      <span class="text-slate-400">·</span>
-      <span class="bg-[var(--background)] px-1.5 py-0.5 rounded border border-[var(--border)] text-[10px]">매일 아침 자동 갱신</span>
+      <span class="text-slate-300">·</span>
+      <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md border border-slate-200 text-[10px] font-bold">매일 아침 자동 갱신</span>
     </div>
 
-    <div class="flex items-center gap-2 no-print">
-      <button onclick="fetchScheduleData(true)" id="btnRefresh" class="hover:text-[var(--foreground)] flex items-center gap-1 transition-colors">
+    <div class="flex items-center gap-3 no-print">
+      <button onclick="fetchScheduleData(true)" id="btnRefresh" class="hover:text-blue-600 font-semibold flex items-center gap-1 transition-colors">
         <span>⟳</span>
-        <span class="text-[11px] underline">새로고침</span>
+        <span class="underline">새로고침</span>
       </button>
     </div>
   </footer>
 
+  <!-- CORE LOGIC & STAGESHOW ENHANCEMENTS -->
   <script>
     const tierMapping = {
       tier1: ['neuro', 'endo', 'cardio', 'nephro'],
@@ -343,6 +487,37 @@
     let selectedMobileDay = '월';
     let currentWeekOffset = 0; // 0: 이번주, 1: 다음주
 
+    // ==========================================
+    // CRISP NUMBER ANIMATION ENGINE (깨짐 없는 선명한 카운터)
+    // ==========================================
+    function animateNumber(elementId, targetNum) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      const currentNum = parseInt(el.innerText, 10) || 0;
+      if (currentNum === targetNum) {
+        el.innerText = targetNum;
+        return;
+      }
+      const diff = targetNum - currentNum;
+      const duration = 200;
+      const startTime = performance.now();
+      function update(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(1, elapsed / duration);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        el.innerText = Math.round(currentNum + diff * ease);
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        } else {
+          el.innerText = targetNum;
+        }
+      }
+      requestAnimationFrame(update);
+    }
+
+    // ==========================================
+    // DATA FETCHING & INITIALIZATION
+    // ==========================================
     async function fetchScheduleData(forceRefresh = false) {
       const btn = document.getElementById('btnRefresh');
       if (btn) btn.innerText = '⟳ 갱신 중...';
@@ -358,7 +533,7 @@
           if (!fallbackRes.ok) throw new Error('Local JSON fallback failed');
           currentScheduleData = await fallbackRes.json();
         } catch (e2) {
-          console.warn('API 및 로컬 파일 실패, 목업 폴백 가동:', e2);
+          console.warn('Fallback failed, using mock data:', e2);
           currentScheduleData = getMockFallbackData();
         }
       }
@@ -422,20 +597,13 @@
       currentWeekOffset = offset;
       const btnThis = document.getElementById('btnWeekThis');
       const btnNext = document.getElementById('btnWeekNext');
-      const badge = document.getElementById('weekStatusBadge');
 
       if (offset === 0) {
-        btnThis.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-bold bg-blue-600 text-white shadow-sm transition-all text-xs sm:text-sm';
-        btnNext.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all text-xs sm:text-sm';
-        if (badge) {
-          badge.innerHTML = '<span class="px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-600 font-bold text-xs">● 이번주 외래 진료 일정</span>';
-        }
+        btnThis.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-bold bg-blue-600 text-white shadow-sm transition-all text-xs';
+        btnNext.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:text-slate-900 transition-all text-xs';
       } else {
-        btnNext.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-bold bg-indigo-600 text-white shadow-sm transition-all text-xs sm:text-sm';
-        btnThis.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all text-xs sm:text-sm';
-        if (badge) {
-          badge.innerHTML = '<span class="px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-600 font-bold text-xs">🔮 다음주 출근부 미리보기</span>';
-        }
+        btnNext.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-bold bg-indigo-600 text-white shadow-sm transition-all text-xs';
+        btnThis.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:text-slate-900 transition-all text-xs';
       }
 
       renderCurrentWeek();
@@ -457,6 +625,7 @@
       renderWeeklyHeader(active.weekDays, active.isNextWeek);
       renderWeeklyCells(active.weekly, active.weekDays);
       renderMobileDayView(active);
+      updateWorkloadMetrics(active);
 
       const titleEl = document.getElementById('weekRangeTitle');
       if (titleEl) {
@@ -464,11 +633,58 @@
       }
     }
 
+    // 외래 실시간 현황 (병원 전체 고정 팩트 + 필터 선택 집계 분리)
+    function updateWorkloadMetrics(activeWeek) {
+      if (!activeWeek || !activeWeek.weekly) return;
+
+      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+      const now = new Date();
+      const todayDayName = dayNames[now.getDay()];
+      const targetDay = ['월', '화', '수', '목', '금'].includes(todayDayName) ? todayDayName : '월';
+
+      // 1. [필터 반영] 현재 사용자가 선택한 진료과의 총 활성 의사 수
+      let totalFilteredDocs = 0;
+      ['AM', 'PM'].forEach(slot => {
+        ['월', '화', '수', '목', '금'].forEach(d => {
+          const list = (activeWeek.weekly[slot] && activeWeek.weekly[slot][d]) || [];
+          totalFilteredDocs += list.filter(doc => activeDepts[doc.deptKey] && !doc.isClosed).length;
+        });
+      });
+      animateNumber('activeTotalRolling', totalFilteredDocs);
+
+      // 2. [병원 전체 고정 팩트] 오늘(targetDay) 건대병원 전체 외래 의사 수 (필터에 영향받지 않는 객관적 팩트)
+      const allTodayAm = (activeWeek.weekly.AM && activeWeek.weekly.AM[targetDay]) || [];
+      const allTodayPm = (activeWeek.weekly.PM && activeWeek.weekly.PM[targetDay]) || [];
+
+      const totalAmActive = allTodayAm.filter(d => !d.isClosed).length;
+      const totalPmActive = allTodayPm.filter(d => !d.isClosed).length;
+      
+      const totalAmClosed = allTodayAm.filter(d => d.isClosed).length;
+      const totalPmClosed = allTodayPm.filter(d => d.isClosed).length;
+      const totalClosed = totalAmClosed + totalPmClosed;
+
+      const todayBadge = document.getElementById('todayDayBadge');
+      if (todayBadge) todayBadge.innerText = activeWeek.isNextWeek ? `다음주 ${targetDay}` : targetDay;
+
+      animateNumber('todayAmCount', totalAmActive);
+      animateNumber('todayPmCount', totalPmActive);
+
+      const closedEl = document.getElementById('todayClosedBadge');
+      if (closedEl) {
+        if (totalClosed > 0) {
+          closedEl.classList.remove('hidden');
+          closedEl.innerText = `휴진 ${totalClosed}명`;
+        } else {
+          closedEl.classList.add('hidden');
+        }
+      }
+    }
+
     // DESKTOP: 주간 테이블 헤더
     function renderWeeklyHeader(weekDays, isNextWeek = false) {
       const thead = document.getElementById('weeklyThead');
       if (!thead) return;
-      let html = '<th class="p-2.5 w-16 text-center font-semibold">시간</th>';
+      let html = '<th class="p-3 w-20 text-center font-bold text-slate-600">시간</th>';
 
       const now = new Date();
       const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
@@ -477,12 +693,12 @@
 
       weekDays.forEach((w) => {
         const isToday = !isNextWeek && ((w.dateStr === todayStr) || (w.dayName === todayDayName));
-        const todayClass = isToday ? 'bg-blue-500/10 ring-2 ring-blue-500/40 text-blue-700 font-bold' : '';
+        const todayClass = isToday ? 'bg-blue-50/70 border-b-2 border-b-blue-600 text-blue-700' : '';
         html += `
-          <th class="p-2.5 w-1/5 font-semibold border-l border-[var(--border)] cursor-pointer hover:bg-blue-500/10 transition-colors ${todayClass}" onclick="selectDailyDate('${w.dateStr}')">
+          <th class="p-3 w-1/5 font-semibold border-l border-slate-200/80 cursor-pointer hover:bg-slate-50 transition-colors ${todayClass}" onclick="selectDailyDate('${w.dateStr}')">
             <div class="flex items-center justify-between">
-              <span class="font-bold ${isToday ? 'text-blue-600' : 'text-[var(--foreground)]'}">${w.label}</span>
-              ${isToday ? '<span class="text-[9px] px-1 py-0.2 rounded bg-blue-600 text-white font-extrabold no-print">TODAY</span>' : '<span class="text-[10px] text-blue-600 no-print hover:underline">상세 →</span>'}
+              <span class="font-extrabold ${isToday ? 'text-blue-600' : 'text-slate-800'}">${w.label}</span>
+              ${isToday ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-600 text-white font-black shadow-xs no-print animate-pulse">TODAY</span>' : '<span class="text-[10px] text-blue-600 no-print hover:underline font-semibold">상세 →</span>'}
             </div>
           </th>
         `;
@@ -490,7 +706,7 @@
       thead.innerHTML = html;
     }
 
-    // DESKTOP: 주간 테이블 셀 렌더링 (티어별 점선 분할)
+    // DESKTOP: 주간 테이블 셀 렌더링
     function renderWeeklyCells(weekly, weekDays) {
       const dayNames = ['월', '화', '수', '목', '금'];
       ['AM', 'PM'].forEach(slot => {
@@ -509,15 +725,15 @@
           if (tier3Docs.length > 0) validTierGroups.push({ tier: 3, docs: tier3Docs });
 
           if (validTierGroups.length === 0) {
-            cell.innerHTML = '<span class="text-[10px] text-slate-400">-</span>';
+            cell.innerHTML = '<span class="text-[11px] text-slate-300 font-medium">-</span>';
           } else {
             const html = validTierGroups.map((group, groupIdx) => {
-              const dividerClass = groupIdx === 0 ? '' : 'pt-1.5 mt-1.5 border-t border-dashed border-[var(--border)]';
+              const dividerClass = groupIdx === 0 ? '' : 'pt-2 mt-2 border-t border-dashed border-slate-200';
               const chipsHtml = group.docs.map(doc => {
                 const closedClass = doc.isClosed ? 'chip-closed' : '';
                 const closedBadge = doc.isClosed ? ` <span class="text-[9px] text-rose-600 font-bold">[${doc.closedReason || '휴진'}]</span>` : '';
                 return `
-                  <span class="item-${doc.deptKey} ${doc.chipClass} ${closedClass} px-1.5 py-0.5 rounded text-xs inline-block">
+                  <span class="chip-item item-${doc.deptKey} ${doc.chipClass} ${closedClass} px-2 py-0.5 rounded-md text-xs font-semibold inline-block shadow-2xs">
                     ${doc.name}${closedBadge}
                   </span>
                 `;
@@ -532,9 +748,17 @@
       });
     }
 
-    // MOBILE: 요일별 세그먼트 탭 선택 및 카드 렌더링 (< sm 전용)
-    function selectMobileDay(dayName) {
+    // ==========================================
+    // MOBILE DAY VIEW & TOUCH SWIPE GESTURES
+    // ==========================================
+    function selectMobileDay(dayName, direction = null) {
       selectedMobileDay = dayName;
+      const card = document.getElementById('mobileCardContainer');
+      if (card && direction) {
+        card.classList.remove('swipe-anim-left', 'swipe-anim-right');
+        void card.offsetWidth; // Reflow trigger
+        card.classList.add(direction === 'left' ? 'swipe-anim-left' : 'swipe-anim-right');
+      }
       renderMobileDayView(getActiveWeekData());
     }
 
@@ -553,10 +777,10 @@
 
         if (isSelected) {
           const activeBg = activeWeek.isNextWeek ? 'bg-indigo-600' : 'bg-blue-600';
-          btn.className = `py-1.5 rounded-lg font-bold ${activeBg} text-white shadow-sm`;
-          btn.innerHTML = `${d}${isToday ? ' <span class="text-[9px] px-1 bg-white text-blue-600 rounded">오늘</span>' : ''}`;
+          btn.className = `py-1.5 rounded-lg font-bold ${activeBg} text-white shadow-xs`;
+          btn.innerHTML = `${d}${isToday ? ' <span class="text-[9px] px-1 bg-white text-blue-600 rounded-sm">오늘</span>' : ''}`;
         } else {
-          btn.className = `py-1.5 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] ${isToday ? 'border border-blue-500/50 text-blue-600 font-bold' : ''}`;
+          btn.className = `py-1.5 rounded-lg text-slate-500 hover:text-slate-900 ${isToday ? 'border border-blue-500/50 text-blue-600 font-bold' : ''}`;
           btn.innerHTML = `${d}${isToday ? ' <span class="text-[9px] text-blue-600">•</span>' : ''}`;
         }
       });
@@ -572,7 +796,9 @@
 
       ['AM', 'PM'].forEach(slot => {
         const targetId = slot === 'AM' ? 'mAmList' : 'mPmList';
+        const badgeId = slot === 'AM' ? 'mAmCountBadge' : 'mPmCountBadge';
         const el = document.getElementById(targetId);
+        const badge = document.getElementById(badgeId);
         if (!el) return;
 
         const docs = (activeWeek.weekly[slot] && activeWeek.weekly[slot][selectedMobileDay]) || [];
@@ -581,21 +807,24 @@
         const tier2Docs = docs.filter(d => activeDepts[d.deptKey] && tierMapping.tier2.includes(d.deptKey));
         const tier3Docs = docs.filter(d => activeDepts[d.deptKey] && tierMapping.tier3.includes(d.deptKey));
 
+        const activeCount = tier1Docs.length + tier2Docs.length + tier3Docs.length;
+        if (badge) badge.innerText = `${activeCount}명`;
+
         const validTierGroups = [];
         if (tier1Docs.length > 0) validTierGroups.push({ tier: 1, docs: tier1Docs });
         if (tier2Docs.length > 0) validTierGroups.push({ tier: 2, docs: tier2Docs });
         if (tier3Docs.length > 0) validTierGroups.push({ tier: 3, docs: tier3Docs });
 
         if (validTierGroups.length === 0) {
-          el.innerHTML = '<span class="text-xs text-[var(--muted-foreground)]">출근 의료진이 없습니다.</span>';
+          el.innerHTML = '<span class="text-xs text-slate-400 font-medium">선택된 조건의 출근 의료진이 없습니다.</span>';
         } else {
           const html = validTierGroups.map((group, groupIdx) => {
-            const dividerClass = groupIdx === 0 ? '' : 'pt-2 mt-2 border-t border-dashed border-[var(--border)]';
+            const dividerClass = groupIdx === 0 ? '' : 'pt-2 mt-2 border-t border-dashed border-slate-200';
             const chipsHtml = group.docs.map(doc => {
               const closedClass = doc.isClosed ? 'chip-closed' : '';
               const closedBadge = doc.isClosed ? ` <span class="text-[9px] text-rose-600 font-bold">[${doc.closedReason || '휴진'}]</span>` : '';
               return `
-                <span class="${doc.chipClass} ${closedClass} px-2 py-0.5 rounded text-xs font-semibold inline-block">
+                <span class="chip-item ${doc.chipClass} ${closedClass} px-2 py-1 rounded-md text-xs font-semibold inline-block shadow-2xs">
                   ${doc.name}${closedBadge}
                 </span>
               `;
@@ -609,7 +838,42 @@
       });
     }
 
-    // 일별 상세 뷰
+    // Touch Swipe Setup for Mobile
+    (function setupTouchGestures() {
+      let touchStartX = 0;
+      let touchEndX = 0;
+      const dayOrder = ['월', '화', '수', '목', '금'];
+
+      const container = document.getElementById('mobileCardContainer');
+      if (!container) return;
+
+      container.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+
+      container.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+      }, { passive: true });
+
+      function handleSwipe() {
+        const threshold = 40;
+        const diff = touchEndX - touchStartX;
+        const currentIndex = dayOrder.indexOf(selectedMobileDay);
+
+        if (diff < -threshold && currentIndex < dayOrder.length - 1) {
+          // Swipe Left -> Next Day
+          selectMobileDay(dayOrder[currentIndex + 1], 'left');
+        } else if (diff > threshold && currentIndex > 0) {
+          // Swipe Right -> Prev Day
+          selectMobileDay(dayOrder[currentIndex - 1], 'right');
+        }
+      }
+    })();
+
+    // ==========================================
+    // DAILY DRILLDOWN VIEW
+    // ==========================================
     function renderDailyOptions(weekDays = [], nextWeekDays = []) {
       const sel = document.getElementById('dailyDatePicker');
       if (!sel || sel.options.length > 0) return;
@@ -656,14 +920,14 @@
         for (const [deptName, info] of Object.entries(grouped)) {
           count += info.docs.length;
           html += `
-            <div class="p-2 rounded-lg bg-[var(--background)] border border-[var(--border)]">
-              <div class="text-[11px] font-bold text-[var(--muted-foreground)] mb-1 flex items-center justify-between">
+            <div class="p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
+              <div class="text-[11px] font-bold text-slate-500 mb-1.5 flex items-center justify-between">
                 <span>${deptName}</span>
-                <span class="text-[10px] text-slate-500">${info.docs.length}명</span>
+                <span class="text-[10px] text-slate-400 font-semibold">${info.docs.length}명</span>
               </div>
-              <div class="flex flex-wrap gap-1">
+              <div class="flex flex-wrap gap-1.5">
                 ${info.docs.map(doc => `
-                  <span class="${doc.chipClass} ${doc.isClosed ? 'chip-closed' : ''} px-2 py-0.5 rounded text-xs font-semibold">
+                  <span class="chip-item ${doc.chipClass} ${doc.isClosed ? 'chip-closed' : ''} px-2 py-0.5 rounded-md text-xs font-semibold shadow-2xs">
                     ${doc.name}${doc.isClosed ? ` <span class="text-[9px] text-rose-600">[${doc.closedReason || '휴진'}]</span>` : ''}
                   </span>
                 `).join('')}
@@ -671,29 +935,30 @@
             </div>
           `;
         }
-        return { html: html || '<div class="text-xs text-[var(--muted-foreground)] p-3 text-center">선택된 조건의 출근 의료진이 없습니다.</div>', count };
+        return { html: html || '<div class="text-xs text-slate-400 p-4 text-center">선택된 조건의 출근 의료진이 없습니다.</div>', count };
       }
 
       const amRes = buildGroupedList(data.AM || []);
       const pmRes = buildGroupedList(data.PM || []);
 
       document.getElementById('amDoctorList').innerHTML = amRes.html;
-      document.getElementById('amCountBadge').innerText = `${amRes.count}명`;
+      animateNumber('amCountRolling', amRes.count);
 
       document.getElementById('pmDoctorList').innerHTML = pmRes.html;
-      document.getElementById('pmCountBadge').innerText = `${pmRes.count}명`;
+      animateNumber('pmCountRolling', pmRes.count);
     }
 
+    // ==========================================
+    // FILTER CONTROLS & UI TOGGLES
+    // ==========================================
     function toggleDept(deptKey) {
       activeDepts[deptKey] = !activeDepts[deptKey];
       updateFiltersUI();
     }
 
-    // 티어 버튼 다중 선택 토글 (Tier 1 / Tier 2 / Tier 3)
     function toggleTierFilter(tierKey) {
       const depts = tierMapping[tierKey];
       const allActive = depts.every(d => activeDepts[d]);
-      // 해당 티어가 다 켜져 있으면 끄고, 아니면 켬!
       depts.forEach(d => {
         activeDepts[d] = !allActive;
       });
@@ -701,7 +966,6 @@
     }
 
     function resetFilters() {
-      // 모든 진료과 비활성화
       Object.keys(activeDepts).forEach(d => {
         activeDepts[d] = false;
       });
@@ -709,7 +973,6 @@
     }
 
     function updateFiltersUI() {
-      // 1. 개별 진료과 칩 업데이트
       for (const k in activeDepts) {
         const btn = document.getElementById(`flt-${k}`);
         if (!btn) continue;
@@ -723,12 +986,10 @@
         }
       }
 
-      // 2. 상단 큰 티어 버튼 활성/비활성 스타일 동적 업데이트
       updateTierButtonState('tier1', 'btnTier1', 'purple');
       updateTierButtonState('tier2', 'btnTier2', 'sky');
       updateTierButtonState('tier3', 'btnTier3', 'slate');
 
-      // 3. 화면 재렌더링
       renderCurrentWeek();
 
       const dateKey = document.getElementById('dailyDatePicker')?.value;
@@ -743,19 +1004,19 @@
 
       if (anyActive) {
         if (color === 'purple') {
-          btn.className = 'px-3.5 sm:px-4 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all border shadow-sm bg-purple-600 text-white border-purple-600 ring-2 ring-purple-600/30';
+          btn.className = 'px-3 py-1 rounded-lg font-bold text-xs transition-all border shadow-xs bg-purple-600 text-white border-purple-600 ring-2 ring-purple-600/20 active:scale-95';
         } else if (color === 'sky') {
-          btn.className = 'px-3.5 sm:px-4 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all border shadow-sm bg-sky-600 text-white border-sky-600 ring-2 ring-sky-600/30';
+          btn.className = 'px-3 py-1 rounded-lg font-bold text-xs transition-all border shadow-xs bg-sky-600 text-white border-sky-600 ring-2 ring-sky-600/20 active:scale-95';
         } else {
-          btn.className = 'px-3.5 sm:px-4 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all border shadow-sm bg-slate-700 text-white border-slate-700 ring-2 ring-slate-700/30';
+          btn.className = 'px-3 py-1 rounded-lg font-bold text-xs transition-all border shadow-xs bg-slate-700 text-white border-slate-700 ring-2 ring-slate-700/20 active:scale-95';
         }
       } else {
         if (color === 'purple') {
-          btn.className = 'px-3.5 sm:px-4 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all border bg-[var(--card)] text-purple-700 border-purple-300 hover:bg-purple-50';
+          btn.className = 'px-3 py-1 rounded-lg font-bold text-xs transition-all border bg-white text-purple-700 border-purple-200 hover:bg-purple-50 active:scale-95';
         } else if (color === 'sky') {
-          btn.className = 'px-3.5 sm:px-4 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all border bg-[var(--card)] text-sky-700 border-sky-300 hover:bg-sky-50';
+          btn.className = 'px-3 py-1 rounded-lg font-bold text-xs transition-all border bg-white text-sky-700 border-sky-200 hover:bg-sky-50 active:scale-95';
         } else {
-          btn.className = 'px-3.5 sm:px-4 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all border bg-[var(--card)] text-slate-700 border-slate-300 hover:bg-slate-100';
+          btn.className = 'px-3 py-1 rounded-lg font-bold text-xs transition-all border bg-white text-slate-700 border-slate-200 hover:bg-slate-50 active:scale-95';
         }
       }
     }
@@ -767,17 +1028,13 @@
       const viewDaily = document.getElementById('viewDaily');
 
       if (mode === 'weekly') {
-        tabWeekly.classList.add('bg-blue-600', 'text-white');
-        tabWeekly.classList.remove('text-[var(--muted-foreground)]');
-        tabDaily.classList.remove('bg-blue-600', 'text-white');
-        tabDaily.classList.add('text-[var(--muted-foreground)]');
+        tabWeekly.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-md font-bold bg-white text-blue-600 shadow-sm transition-all';
+        tabDaily.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-md font-semibold text-slate-600 hover:text-slate-900 transition-all';
         viewWeekly.classList.remove('hidden');
         viewDaily.classList.add('hidden');
       } else {
-        tabDaily.classList.add('bg-blue-600', 'text-white');
-        tabDaily.classList.remove('text-[var(--muted-foreground)]');
-        tabWeekly.classList.remove('bg-blue-600', 'text-white');
-        tabWeekly.classList.add('text-[var(--muted-foreground)]');
+        tabDaily.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-md font-bold bg-white text-blue-600 shadow-sm transition-all';
+        tabWeekly.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-md font-semibold text-slate-600 hover:text-slate-900 transition-all';
         viewWeekly.classList.add('hidden');
         viewDaily.classList.remove('hidden');
         renderDailyView(document.getElementById('dailyDatePicker').value);
@@ -827,26 +1084,11 @@
             '금': [{ deptKey: 'cardio', name: '신제욱', chipClass: 'chip-cardio' }]
           }
         },
-        nextWeekly: {
-          AM: {
-            '월': [{ deptKey: 'neuro', name: '김한영', chipClass: 'chip-neuro' }],
-            '화': [{ deptKey: 'neuro', name: '문연실', chipClass: 'chip-neuro' }],
-            '수': [{ deptKey: 'neuro', name: '한설희', chipClass: 'chip-neuro' }],
-            '목': [{ deptKey: 'neuro', name: '장재원', chipClass: 'chip-neuro' }],
-            '금': [{ deptKey: 'neuro', name: '김다영', chipClass: 'chip-neuro' }]
-          },
-          PM: {
-            '월': [{ deptKey: 'neuro', name: '박정진', chipClass: 'chip-neuro' }],
-            '화': [{ deptKey: 'endo', name: '박경수', chipClass: 'chip-endo' }],
-            '수': [{ deptKey: 'neuro', name: '김동욱', chipClass: 'chip-neuro' }],
-            '목': [{ deptKey: 'neuro', name: '김동욱', chipClass: 'chip-neuro' }],
-            '금': [{ deptKey: 'cardio', name: '신제욱', chipClass: 'chip-cardio' }]
-          }
-        },
         daily: {}
       };
     }
 
+    // Initialize
     fetchScheduleData();
   </script>
 </body>
