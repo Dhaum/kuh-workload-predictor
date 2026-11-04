@@ -13,7 +13,22 @@
 
   <!-- 웹폰트: Pretendard for crisp high-density Korean typography -->
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  
+  <!-- 다크모드 초기 감지 (깜빡임/FOUC 방지) -->
+  <script>
+    (function() {
+      try {
+        const saved = localStorage.getItem('kuh-theme');
+        if (saved === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+  </script>
 
   <style>
     :root {
@@ -103,6 +118,121 @@
       border-color: #e2e8f0 !important;
     }
 
+    /* ==========================================
+       STAGESHOW QUIET DARK MODE (다크모드 완벽 대응)
+       ========================================== */
+    html.dark {
+      --bg-stage: #090d16;
+      --card-bg: #111a2e;
+      --card-border: #1e293b;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+
+    html.dark body {
+      background: linear-gradient(180deg, #090d16 0%, #0d1527 180px) !important;
+      background-color: #090d16 !important;
+      color: #f1f5f9 !important;
+    }
+
+    html.dark .stageshow-glass {
+      background: rgba(13, 21, 39, 0.88) !important;
+      border-bottom-color: rgba(30, 41, 59, 0.85) !important;
+    }
+
+    html.dark .stageshow-card {
+      background: #111a2e !important;
+      border-color: #1e293b !important;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4) !important;
+    }
+
+    /* 텍스트 & 테두리 계층 */
+    html.dark h1, html.dark .text-slate-900 { color: #f8fafc !important; }
+    html.dark .text-slate-800 { color: #f1f5f9 !important; }
+    html.dark .text-slate-700 { color: #cbd5e1 !important; }
+    html.dark .text-slate-600 { color: #94a3b8 !important; }
+    html.dark .text-slate-500 { color: #64748b !important; }
+    html.dark .border-slate-100, html.dark .border-slate-200, html.dark .border-slate-200\/80 {
+      border-color: #1e293b !important;
+    }
+
+    /* 표면 배경 */
+    html.dark .bg-white {
+      background-color: #111a2e !important;
+    }
+    html.dark .bg-slate-50, html.dark .bg-slate-50\/60, html.dark .bg-slate-50\/80, html.dark .bg-slate-50\/90 {
+      background-color: #0c1424 !important;
+    }
+    html.dark .bg-slate-100 {
+      background-color: #162036 !important;
+    }
+    html.dark .bg-slate-200, html.dark .bg-slate-200\/80 {
+      background-color: #1e293b !important;
+      border-color: #334155 !important;
+    }
+
+    /* 다크모드 칩 (Glow Pastel Chips: 눈부심 방지 + 선명한 대비) */
+    html.dark .chip-neuro   { background-color: rgba(168, 85, 247, 0.16) !important; color: #d8b4fe !important; border-color: rgba(168, 85, 247, 0.4) !important; }
+    html.dark .chip-endo    { background-color: rgba(249, 115, 22, 0.16) !important; color: #fdba74 !important; border-color: rgba(249, 115, 22, 0.4) !important; }
+    html.dark .chip-cardio  { background-color: rgba(244, 63, 94, 0.16) !important; color: #fda4af !important; border-color: rgba(244, 63, 94, 0.4) !important; }
+    html.dark .chip-nephro  { background-color: rgba(14, 165, 233, 0.16) !important; color: #7dd3fc !important; border-color: rgba(14, 165, 233, 0.4) !important; }
+    html.dark .chip-onco    { background-color: rgba(59, 130, 246, 0.16) !important; color: #93c5fd !important; border-color: rgba(59, 130, 246, 0.4) !important; }
+    html.dark .chip-pulmo   { background-color: rgba(20, 184, 166, 0.16) !important; color: #5eead4 !important; border-color: rgba(20, 184, 166, 0.4) !important; }
+    html.dark .chip-rheum   { background-color: rgba(236, 72, 153, 0.16) !important; color: #f9a8d4 !important; border-color: rgba(236, 72, 153, 0.4) !important; }
+    html.dark .chip-ortho   { background-color: rgba(34, 197, 94, 0.16) !important; color: #86efac !important; border-color: rgba(34, 197, 94, 0.4) !important; }
+    html.dark .chip-ns      { background-color: rgba(99, 102, 241, 0.16) !important; color: #a5b4fc !important; border-color: rgba(99, 102, 241, 0.4) !important; }
+    html.dark .chip-gi      { background-color: rgba(245, 158, 11, 0.16) !important; color: #fde047 !important; border-color: rgba(245, 158, 11, 0.4) !important; }
+    html.dark .chip-cs      { background-color: rgba(239, 68, 68, 0.16) !important; color: #fca5a5 !important; border-color: rgba(239, 68, 68, 0.4) !important; }
+    html.dark .chip-pain, html.dark .chip-uro, html.dark .chip-oph, html.dark .chip-ent,
+    html.dark .chip-derma, html.dark .chip-psych, html.dark .chip-fm, html.dark .chip-gs,
+    html.dark .chip-obgy, html.dark .chip-pedia, html.dark .chip-rm, html.dark .chip-inf {
+      background-color: rgba(148, 163, 184, 0.12) !important; color: #cbd5e1 !important; border-color: rgba(148, 163, 184, 0.25) !important;
+    }
+    html.dark .chip-closed {
+      background-color: rgba(15, 23, 42, 0.6) !important;
+      color: #64748b !important;
+      border-color: rgba(51, 65, 85, 0.5) !important;
+    }
+
+    /* 다크모드 주간 테이블 */
+    html.dark table thead tr {
+      background-color: #0c1424 !important;
+    }
+    html.dark table thead th {
+      color: #94a3b8 !important;
+      border-color: #1e293b !important;
+    }
+    html.dark table tbody tr:hover {
+      background-color: rgba(30, 41, 59, 0.4) !important;
+    }
+    html.dark table td, html.dark table th {
+      border-color: #1e293b !important;
+    }
+    html.dark .divide-slate-200\/80 > :not([hidden]) ~ :not([hidden]) {
+      border-color: #1e293b !important;
+    }
+    html.dark table td:first-child {
+      background-color: rgba(15, 23, 42, 0.75) !important;
+    }
+    html.dark th.bg-blue-50\/70 {
+      background-color: rgba(37, 99, 235, 0.18) !important;
+      border-bottom-color: #3b82f6 !important;
+      color: #60a5fa !important;
+    }
+
+    /* 다크모드 입력창 및 버튼 */
+    html.dark select, html.dark input {
+      background-color: #0c1424 !important;
+      color: #f1f5f9 !important;
+      border-color: #1e293b !important;
+    }
+    html.dark button.border-slate-200 {
+      border-color: #1e293b !important;
+    }
+    html.dark footer {
+      border-color: #1e293b !important;
+    }
+
     /* 터치 제스처 슬라이드 애니메이션 */
     .swipe-container {
       transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
@@ -161,7 +291,13 @@
         </div>
 
         <!-- Action Controls -->
-        <div class="flex items-center gap-2 no-print flex-wrap">
+        <div class="flex items-center gap-1.5 sm:gap-2 no-print flex-wrap">
+          <!-- Dark Mode Toggle Button -->
+          <button onclick="toggleTheme()" id="themeToggleBtn" aria-label="테마 전환" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-sm transition-all active:scale-95 flex items-center gap-1">
+            <span id="themeIcon">🌙</span>
+            <span id="themeLabel" class="hidden sm:inline text-[11px] font-bold">다크</span>
+          </button>
+
           <!-- A4 Print -->
           <button onclick="window.print()" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-sm transition-all active:scale-95">
             <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
@@ -622,9 +758,54 @@
     }
 
     // ==========================================
+    // THEME CONTROLLER (다크모드 토글 및 영구 저장)
+    // ==========================================
+    function initTheme() {
+      try {
+        const saved = localStorage.getItem('kuh-theme');
+        if (saved === 'dark') {
+          applyTheme('dark');
+        } else {
+          applyTheme('light');
+        }
+      } catch (e) {
+        applyTheme('light');
+      }
+    }
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const nextTheme = isDark ? 'light' : 'dark';
+      try {
+        localStorage.setItem('kuh-theme', nextTheme);
+      } catch (e) {}
+      applyTheme(nextTheme);
+    }
+
+    function applyTheme(theme) {
+      const html = document.documentElement;
+      const icon = document.getElementById('themeIcon');
+      const label = document.getElementById('themeLabel');
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+
+      if (theme === 'dark') {
+        html.classList.add('dark');
+        if (icon) icon.innerText = '☀️';
+        if (label) label.innerText = '라이트';
+        if (metaTheme) metaTheme.setAttribute('content', '#090d16');
+      } else {
+        html.classList.remove('dark');
+        if (icon) icon.innerText = '🌙';
+        if (label) label.innerText = '다크';
+        if (metaTheme) metaTheme.setAttribute('content', '#ffffff');
+      }
+    }
+
+    // ==========================================
     // DATA FETCHING & INITIALIZATION
     // ==========================================
     async function fetchScheduleData(forceRefresh = false) {
+      initTheme();
       const btn = document.getElementById('btnRefresh');
       if (btn) btn.innerText = '⟳ 갱신 중...';
 
@@ -706,10 +887,10 @@
 
       if (offset === 0) {
         btnThis.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-bold bg-blue-600 text-white shadow-sm transition-all text-xs';
-        btnNext.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:text-slate-900 transition-all text-xs';
+        btnNext.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all text-xs';
       } else {
         btnNext.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-bold bg-indigo-600 text-white shadow-sm transition-all text-xs';
-        btnThis.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:text-slate-900 transition-all text-xs';
+        btnThis.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all text-xs';
       }
 
       renderCurrentWeek();
@@ -905,7 +1086,7 @@
           btn.className = `py-1.5 rounded-lg font-bold ${activeBg} text-white shadow-xs`;
           btn.innerHTML = `${d}${isToday ? ' <span class="text-[9px] px-1 bg-white text-blue-600 rounded-sm">오늘</span>' : ''}${searchBadge}`;
         } else {
-          btn.className = `py-1.5 rounded-lg text-slate-500 hover:text-slate-900 ${isToday ? 'border border-blue-500/50 text-blue-600 font-bold' : ''} ${hasSearchMatch ? 'bg-blue-50/80 font-bold text-blue-700' : ''}`;
+          btn.className = `py-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 ${isToday ? 'border border-blue-500/50 text-blue-600 font-bold' : ''} ${hasSearchMatch ? 'bg-blue-50/80 dark:bg-blue-950/40 font-bold text-blue-700 dark:text-blue-300' : ''}`;
           btn.innerHTML = `${d}${isToday ? ' <span class="text-[9px] text-blue-600">•</span>' : ''}${searchBadge}`;
         }
       });
@@ -1163,11 +1344,11 @@
         }
       } else {
         if (color === 'purple') {
-          btn.className = 'px-3 py-1 rounded-lg font-bold text-xs transition-all border bg-white text-purple-700 border-purple-200 hover:bg-purple-50 active:scale-95';
+          btn.className = 'px-3 py-1 rounded-lg font-bold text-xs transition-all border bg-white dark:bg-[#111a2e] text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-900/60 hover:bg-purple-50 dark:hover:bg-purple-950/30 active:scale-95';
         } else if (color === 'sky') {
-          btn.className = 'px-3 py-1 rounded-lg font-bold text-xs transition-all border bg-white text-sky-700 border-sky-200 hover:bg-sky-50 active:scale-95';
+          btn.className = 'px-3 py-1 rounded-lg font-bold text-xs transition-all border bg-white dark:bg-[#111a2e] text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-900/60 hover:bg-sky-50 dark:hover:bg-sky-950/30 active:scale-95';
         } else {
-          btn.className = 'px-3 py-1 rounded-lg font-bold text-xs transition-all border bg-white text-slate-700 border-slate-200 hover:bg-slate-50 active:scale-95';
+          btn.className = 'px-3 py-1 rounded-lg font-bold text-xs transition-all border bg-white dark:bg-[#111a2e] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95';
         }
       }
     }
@@ -1179,13 +1360,13 @@
       const viewDaily = document.getElementById('viewDaily');
 
       if (mode === 'weekly') {
-        tabWeekly.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-md font-bold bg-white text-blue-600 shadow-sm transition-all';
-        tabDaily.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-md font-semibold text-slate-600 hover:text-slate-900 transition-all';
+        tabWeekly.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-md font-bold bg-white dark:bg-[#111a2e] text-blue-600 dark:text-blue-400 shadow-sm transition-all';
+        tabDaily.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-md font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all';
         viewWeekly.classList.remove('hidden');
         viewDaily.classList.add('hidden');
       } else {
-        tabDaily.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-md font-bold bg-white text-blue-600 shadow-sm transition-all';
-        tabWeekly.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-md font-semibold text-slate-600 hover:text-slate-900 transition-all';
+        tabDaily.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-md font-bold bg-white dark:bg-[#111a2e] text-blue-600 dark:text-blue-400 shadow-sm transition-all';
+        tabWeekly.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-md font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all';
         viewWeekly.classList.add('hidden');
         viewDaily.classList.remove('hidden');
         renderDailyView(document.getElementById('dailyDatePicker').value);
