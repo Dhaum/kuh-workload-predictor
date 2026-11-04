@@ -2,25 +2,32 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>&lt;나라약국&gt; 건대외래일정표</title>
   <link rel="icon" type="image/png" href="/icon.png">
   <link rel="apple-touch-icon" href="/icon.png">
   <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" id="metaStatusBar">
+  <meta name="theme-color" content="#ffffff" id="metaThemeColor">
 
   <!-- 웹폰트: Pretendard for crisp high-density Korean typography -->
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   
-  <!-- 다크모드 초기 감지 (깜빡임/FOUC 방지) -->
+  <!-- 다크모드 초기 감지 (노치 및 시스템바 색상 즉시 동기화, 깜빡임 방지) -->
   <script>
     (function() {
       try {
         const saved = localStorage.getItem('kuh-theme');
         if (saved === 'dark') {
           document.documentElement.classList.add('dark');
+          document.documentElement.style.backgroundColor = '#090d16';
+          const meta = document.getElementById('metaThemeColor');
+          if (meta) meta.setAttribute('content', '#090d16');
+          const sb = document.getElementById('metaStatusBar');
+          if (sb) sb.setAttribute('content', 'black-translucent');
+        } else {
+          document.documentElement.style.backgroundColor = '#f8fafc';
         }
       } catch (e) {}
     })();
@@ -46,10 +53,21 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    html {
+      background-color: var(--bg-stage);
+    }
+    html.dark {
+      background-color: #090d16 !important;
+    }
+
     body {
       background: linear-gradient(180deg, #f1f5f9 0%, #f8fafc 180px);
       color: var(--text-main);
       letter-spacing: -0.015em;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
     }
 
     /* Stageshow Quiet Scrollbar */
@@ -57,12 +75,13 @@
     ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.35); border-radius: 999px; }
     ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.6); }
 
-    /* Frosted Glass Toolbar */
+    /* Frosted Glass Toolbar (노치 안전 영역 패딩 동기화) */
     .stageshow-glass {
       background: rgba(255, 255, 255, 0.86);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid rgba(226, 232, 240, 0.85);
+      padding-top: max(0.625rem, calc(0.625rem + env(safe-area-inset-top)));
     }
 
     /* 카드 입체감 & 부드러운 그림자 */
@@ -631,8 +650,8 @@
     </main>
   </div>
 
-  <!-- FOOTER -->
-  <footer class="mt-8 pt-4 pb-6 border-t border-slate-200/80 text-[11px] sm:text-xs text-slate-500 max-w-7xl mx-auto px-4 w-full flex flex-col sm:flex-row items-center justify-between gap-2.5">
+  <!-- FOOTER (하단 홈바 안전영역 확보) -->
+  <footer style="padding-bottom: max(1.5rem, calc(1.5rem + env(safe-area-inset-bottom)));" class="mt-8 pt-4 pb-6 border-t border-slate-200/80 dark:border-slate-800 text-[11px] sm:text-xs text-slate-500 max-w-7xl mx-auto px-4 w-full flex flex-col sm:flex-row items-center justify-between gap-2.5">
     <div class="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
       <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
       <span id="updatedAtText" class="font-medium text-slate-600">데이터 최신화: 로딩 중...</span>
@@ -804,18 +823,25 @@
       const html = document.documentElement;
       const icons = document.querySelectorAll('.themeIcon');
       const labels = document.querySelectorAll('.themeLabel');
-      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      const metaTheme = document.getElementById('metaThemeColor');
+      const metaStatusBar = document.getElementById('metaStatusBar');
 
       if (theme === 'dark') {
         html.classList.add('dark');
         icons.forEach(ic => ic.innerText = '☀️');
         labels.forEach(lb => lb.innerText = '라이트');
         if (metaTheme) metaTheme.setAttribute('content', '#090d16');
+        if (metaStatusBar) metaStatusBar.setAttribute('content', 'black-translucent');
+        html.style.backgroundColor = '#090d16';
+        if (document.body) document.body.style.backgroundColor = '#090d16';
       } else {
         html.classList.remove('dark');
         icons.forEach(ic => ic.innerText = '🌙');
         labels.forEach(lb => lb.innerText = '다크');
         if (metaTheme) metaTheme.setAttribute('content', '#ffffff');
+        if (metaStatusBar) metaStatusBar.setAttribute('content', 'default');
+        html.style.backgroundColor = '#f8fafc';
+        if (document.body) document.body.style.backgroundColor = '#f8fafc';
       }
     }
 
