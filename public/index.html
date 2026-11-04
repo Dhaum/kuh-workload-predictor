@@ -320,9 +320,26 @@
                 <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
                 <span class="font-extrabold text-sm text-slate-900" id="mCardTitle">오늘 외래 일정</span>
               </div>
-              <button onclick="switchView('daily')" class="text-[11px] text-blue-600 font-bold hover:underline">
-                전체 명단 보기 →
-              </button>
+              <div class="flex items-center gap-2">
+                <button onclick="toggleQuickSearch()" id="btnToggleSearch" class="px-2 py-0.5 rounded-lg border border-slate-200 text-slate-600 hover:text-blue-600 hover:border-blue-400 bg-white transition-all flex items-center gap-1 text-[11px] font-bold shadow-2xs">
+                  <span>🔍</span>
+                  <span id="btnToggleSearchText">교수 찾기</span>
+                </button>
+                <button onclick="switchView('daily')" class="text-[11px] text-blue-600 font-bold hover:underline">
+                  전체 명단 보기 →
+                </button>
+              </div>
+            </div>
+
+            <!-- Expandable Quick Search Bar (모바일) -->
+            <div id="quickSearchBar" class="hidden transition-all pb-1">
+              <div class="relative flex items-center">
+                <span class="absolute left-2.5 text-xs text-slate-400">🔍</span>
+                <input type="text" id="quickSearchInput" placeholder="찾으실 교수명을 입력하세요 (예: 문연실, 김동욱)..." 
+                       oninput="handleQuickSearch(this.value)"
+                       class="w-full text-xs pl-8 pr-7 py-2 rounded-xl border border-blue-400/80 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-800 shadow-inner">
+                <button onclick="clearQuickSearch()" id="btnClearSearch" class="absolute right-2.5 text-xs text-slate-400 hover:text-slate-600 font-bold hidden">✕</button>
+              </div>
             </div>
 
             <!-- Morning Block -->
@@ -359,7 +376,16 @@
         <div id="viewWeeklyTable" class="hidden sm:block stageshow-card rounded-2xl overflow-hidden shadow-sm">
           <div class="px-4 py-3 bg-slate-50/90 border-b border-slate-200/80 flex items-center justify-between text-xs">
             <span class="font-bold text-slate-800 text-sm tracking-tight" id="weekRangeTitle">이번주 외래 출근부</span>
-            <span class="text-[11px] text-slate-400 font-medium">월 - 금 주간 스케줄</span>
+            <div class="flex items-center gap-3">
+              <div class="relative flex items-center">
+                <span class="absolute left-2.5 text-xs text-slate-400">🔍</span>
+                <input type="text" id="desktopQuickSearch" placeholder="교수명 즉시 찾기..." 
+                       oninput="handleQuickSearch(this.value)"
+                       class="text-xs pl-7 pr-6 py-1.5 rounded-lg border border-slate-200 bg-white focus:outline-none focus:border-blue-500 w-36 sm:w-48 shadow-2xs">
+                <button onclick="clearQuickSearch()" id="btnClearDesktopSearch" class="absolute right-2 text-xs text-slate-400 hover:text-slate-600 font-bold hidden">✕</button>
+              </div>
+              <span class="text-[11px] text-slate-400 font-medium hidden md:inline">월 - 금 주간 스케줄</span>
+            </div>
           </div>
 
           <div class="overflow-x-auto">
@@ -478,14 +504,94 @@
       tier3: ['pain', 'uro', 'oph', 'ent', 'derma', 'psych', 'fm', 'gs', 'obgy', 'pedia', 'rm', 'inf']
     };
 
+    // 로컬 스토리지에서 필터 상태 복원 (저장된 값 없으면 Tier 1 기본 활성화)
     const activeDepts = {};
-    Object.values(tierMapping).flat().forEach(d => {
-      activeDepts[d] = tierMapping.tier1.includes(d); // 기본 Tier 1 On
-    });
+    function loadActiveDepts() {
+      try {
+        const saved = localStorage.getItem('KUH_ACTIVE_DEPTS_V1');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
+            Object.values(tierMapping).flat().forEach(d => {
+              activeDepts[d] = Boolean(parsed[d]);
+            });
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('로컬스토리지 로드 실패:', e);
+      }
+      // 기본값: Tier 1만 On
+      Object.values(tierMapping).flat().forEach(d => {
+        activeDepts[d] = tierMapping.tier1.includes(d);
+      });
+    }
+
+    function saveActiveDepts() {
+      try {
+        localStorage.setItem('KUH_ACTIVE_DEPTS_V1', JSON.stringify(activeDepts));
+      } catch (e) {
+        console.warn('로컬스토리지 저장 실패:', e);
+      }
+    }
+
+    loadActiveDepts();
 
     let currentScheduleData = null;
     let selectedMobileDay = '월';
     let currentWeekOffset = 0; // 0: 이번주, 1: 다음주
+    let quickSearchQuery = ''; // 교수명 즉시 찾기 검색어
+
+    // 교수명 빠른 찾기 토글 및 핸들러
+    function toggleQuickSearch() {
+      const bar = document.getElementById('quickSearchBar');
+      const input = document.getElementById('quickSearchInput');
+      const btnText = document.getElementById('btnToggleSearchText');
+      if (!bar) return;
+
+      if (bar.classList.contains('hidden')) {
+        bar.classList.remove('hidden');
+        if (btnText) btnText.innerText = '닫기';
+        if (input) {
+          setTimeout(() => input.focus(), 50);
+        }
+      } else {
+        bar.classList.add('hidden');
+        if (btnText) btnText.innerText = '교수 찾기';
+        clearQuickSearch();
+      }
+    }
+
+    function handleQuickSearch(val) {
+      quickSearchQuery = (val || '').trim().toLowerCase();
+      
+      // 모바일 & 데스크탑 검색창 동기화
+      const mInput = document.getElementById('quickSearchInput');
+      const dInput = document.getElementById('desktopQuickSearch');
+      if (mInput && mInput.value !== val) mInput.value = val;
+      if (dInput && dInput.value !== val) dInput.value = val;
+
+      // 지우기(X) 버튼 토글
+      const mClear = document.getElementById('btnClearSearch');
+      const dClear = document.getElementById('btnClearDesktopSearch');
+      if (mClear) mClear.classList.toggle('hidden', !quickSearchQuery);
+      if (dClear) dClear.classList.toggle('hidden', !quickSearchQuery);
+
+      renderCurrentWeek();
+    }
+
+    function clearQuickSearch() {
+      quickSearchQuery = '';
+      const mInput = document.getElementById('quickSearchInput');
+      const dInput = document.getElementById('desktopQuickSearch');
+      if (mInput) mInput.value = '';
+      if (dInput) dInput.value = '';
+      const mClear = document.getElementById('btnClearSearch');
+      const dClear = document.getElementById('btnClearDesktopSearch');
+      if (mClear) mClear.classList.add('hidden');
+      if (dClear) dClear.classList.add('hidden');
+      renderCurrentWeek();
+    }
 
     // ==========================================
     // CRISP NUMBER ANIMATION ENGINE (깨짐 없는 선명한 카운터)
@@ -732,8 +838,20 @@
               const chipsHtml = group.docs.map(doc => {
                 const closedClass = doc.isClosed ? 'chip-closed' : '';
                 const closedBadge = doc.isClosed ? ` <span class="text-[9px] text-rose-600 font-bold">[${doc.closedReason || '휴진'}]</span>` : '';
+                
+                // 교수명 빠른 찾기 하이라이트/디밍
+                let searchClass = '';
+                if (quickSearchQuery) {
+                  const isMatch = doc.name.toLowerCase().includes(quickSearchQuery);
+                  if (isMatch) {
+                    searchClass = 'ring-2 ring-blue-600 ring-offset-1 font-extrabold shadow-md scale-105 z-10';
+                  } else {
+                    searchClass = 'opacity-20 grayscale transition-opacity';
+                  }
+                }
+
                 return `
-                  <span class="chip-item item-${doc.deptKey} ${doc.chipClass} ${closedClass} px-2 py-0.5 rounded-md text-xs font-semibold inline-block shadow-2xs">
+                  <span class="chip-item item-${doc.deptKey} ${doc.chipClass} ${closedClass} ${searchClass} px-2 py-0.5 rounded-md text-xs font-semibold inline-block shadow-2xs transition-all">
                     ${doc.name}${closedBadge}
                   </span>
                 `;
@@ -775,13 +893,20 @@
         const isSelected = (d === selectedMobileDay);
         const isToday = !activeWeek.isNextWeek && (d === todayDayName);
 
+        // 검색어가 있을 때 해당 요일에 검색된 의사가 출근하는지 확인
+        const hasSearchMatch = quickSearchQuery && ['AM', 'PM'].some(slot => 
+          (activeWeek.weekly[slot] && activeWeek.weekly[slot][d] || [])
+            .some(doc => activeDepts[doc.deptKey] && doc.name.toLowerCase().includes(quickSearchQuery))
+        );
+        const searchBadge = hasSearchMatch ? ' <span class="text-[9px] text-blue-600 font-black animate-pulse">●</span>' : '';
+
         if (isSelected) {
           const activeBg = activeWeek.isNextWeek ? 'bg-indigo-600' : 'bg-blue-600';
           btn.className = `py-1.5 rounded-lg font-bold ${activeBg} text-white shadow-xs`;
-          btn.innerHTML = `${d}${isToday ? ' <span class="text-[9px] px-1 bg-white text-blue-600 rounded-sm">오늘</span>' : ''}`;
+          btn.innerHTML = `${d}${isToday ? ' <span class="text-[9px] px-1 bg-white text-blue-600 rounded-sm">오늘</span>' : ''}${searchBadge}`;
         } else {
-          btn.className = `py-1.5 rounded-lg text-slate-500 hover:text-slate-900 ${isToday ? 'border border-blue-500/50 text-blue-600 font-bold' : ''}`;
-          btn.innerHTML = `${d}${isToday ? ' <span class="text-[9px] text-blue-600">•</span>' : ''}`;
+          btn.className = `py-1.5 rounded-lg text-slate-500 hover:text-slate-900 ${isToday ? 'border border-blue-500/50 text-blue-600 font-bold' : ''} ${hasSearchMatch ? 'bg-blue-50/80 font-bold text-blue-700' : ''}`;
+          btn.innerHTML = `${d}${isToday ? ' <span class="text-[9px] text-blue-600">•</span>' : ''}${searchBadge}`;
         }
       });
 
@@ -823,8 +948,20 @@
             const chipsHtml = group.docs.map(doc => {
               const closedClass = doc.isClosed ? 'chip-closed' : '';
               const closedBadge = doc.isClosed ? ` <span class="text-[9px] text-rose-600 font-bold">[${doc.closedReason || '휴진'}]</span>` : '';
+              
+              // 교수명 빠른 찾기 하이라이트/디밍
+              let searchClass = '';
+              if (quickSearchQuery) {
+                const isMatch = doc.name.toLowerCase().includes(quickSearchQuery);
+                if (isMatch) {
+                  searchClass = 'ring-2 ring-blue-600 ring-offset-1 font-extrabold shadow-md scale-105 z-10';
+                } else {
+                  searchClass = 'opacity-20 grayscale transition-opacity';
+                }
+              }
+
               return `
-                <span class="chip-item ${doc.chipClass} ${closedClass} px-2 py-1 rounded-md text-xs font-semibold inline-block shadow-2xs">
+                <span class="chip-item ${doc.chipClass} ${closedClass} ${searchClass} px-2 py-1 rounded-md text-xs font-semibold inline-block shadow-2xs transition-all">
                   ${doc.name}${closedBadge}
                 </span>
               `;
@@ -1003,6 +1140,7 @@
       updateTierButtonState('tier2', 'btnTier2', 'sky');
       updateTierButtonState('tier3', 'btnTier3', 'slate');
 
+      saveActiveDepts(); // 브라우저 로컬 스토리지에 필터 상태 자동 영속화
       renderCurrentWeek();
 
       const dateKey = document.getElementById('dailyDatePicker')?.value;
