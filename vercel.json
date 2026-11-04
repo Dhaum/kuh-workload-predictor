@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/schedule",
+      "destination": "/api/schedule.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/public/$1"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS" },
+        { "key": "Cache-Control", "value": "s-maxage=3600, stale-while-revalidate=86400" }
+      ]
+    }
+  ]
+}

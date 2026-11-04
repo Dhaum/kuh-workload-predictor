@@ -1,0 +1,20 @@
+{
+  "name": "kuh-workload-predictor",
+  "version": "1.0.0",
+  "description": "건국대학교병원 외래 진료 일정 수합 및 약국 조제 난이도 예측 대시보드",
+  "main": "src/cli.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/cli.js",
+    "dev": "node src/cli.js --serve",
+    "build": "node src/cli.js --fetch"
+  },
+  "keywords": [
+    "kuh",
+    "hospital-schedule",
+    "pharmacy",
+    "workload-predictor"
+  ],
+  "author": "Yoonjae",
+  "license": "MIT"
+}
