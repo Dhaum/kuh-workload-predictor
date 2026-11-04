@@ -838,10 +838,11 @@
       });
     }
 
-    // Touch Swipe Setup for Mobile
+    // Touch Swipe Setup for Mobile (정밀 제스처 튜닝: 스크롤 오작동 방지)
     (function setupTouchGestures() {
       let touchStartX = 0;
-      let touchEndX = 0;
+      let touchStartY = 0;
+      let touchStartTime = 0;
       const dayOrder = ['월', '화', '수', '목', '금'];
 
       const container = document.getElementById('mobileCardContainer');
@@ -849,26 +850,38 @@
 
       container.addEventListener('touchstart', e => {
         touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+        touchStartTime = Date.now();
       }, { passive: true });
 
       container.addEventListener('touchend', e => {
-        touchEndX = e.changedTouches[0].screenX;
-        handleSwipe();
-      }, { passive: true });
+        const touchEndX = e.changedTouches[0].screenX;
+        const touchEndY = e.changedTouches[0].screenY;
+        const touchDuration = Date.now() - touchStartTime;
 
-      function handleSwipe() {
-        const threshold = 40;
-        const diff = touchEndX - touchStartX;
-        const currentIndex = dayOrder.indexOf(selectedMobileDay);
+        const diffX = touchEndX - touchStartX;
+        const diffY = touchEndY - touchStartY;
 
-        if (diff < -threshold && currentIndex < dayOrder.length - 1) {
-          // Swipe Left -> Next Day
-          selectMobileDay(dayOrder[currentIndex + 1], 'left');
-        } else if (diff > threshold && currentIndex > 0) {
-          // Swipe Right -> Prev Day
-          selectMobileDay(dayOrder[currentIndex - 1], 'right');
+        // 1. 임계값 상향 (기존 40px -> 80px: 의도적인 스와이프만 인식)
+        const minDistance = 80;
+
+        // 2. 수직 스크롤 간섭 차단: 가로 이동량이 세로 이동량의 1.8배 이상일 때만 반응
+        const isHorizontal = Math.abs(diffX) > Math.abs(diffY) * 1.8;
+
+        // 3. 시간 제한 (600ms 이내의 쾌속 제스처만 인식)
+        const isFlick = touchDuration < 600;
+
+        if (Math.abs(diffX) >= minDistance && isHorizontal && isFlick) {
+          const currentIndex = dayOrder.indexOf(selectedMobileDay);
+          if (diffX < 0 && currentIndex < dayOrder.length - 1) {
+            // Swipe Left -> Next Day
+            selectMobileDay(dayOrder[currentIndex + 1], 'left');
+          } else if (diffX > 0 && currentIndex > 0) {
+            // Swipe Right -> Prev Day
+            selectMobileDay(dayOrder[currentIndex - 1], 'right');
+          }
         }
-      }
+      }, { passive: true });
     })();
 
     // ==========================================
