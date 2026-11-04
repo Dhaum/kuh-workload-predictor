@@ -1,0 +1,112 @@
+# 💊 건대외래일정 (KUH Workload Predictor) 개발 및 운영 인수인계서
+
+> **본 문서의 목적**: 신규 AI 세션(새 대화창) 또는 후속 개발자가 투입되었을 때, 소스 코드 전수 조사로 인한 토큰 낭비를 차단하고 시스템 아키텍처, 5대 절대 금기사항, 데이터 수합 파이프라인 및 배포 운영 절차를 즉시 파악할 수 있도록 돕는 단일 기술 진실 공급원(Technical SSOT)입니다.
+
+---
+
+## 1. 시스템 아키텍처 & 데이터 흐름
+
+```
+[건국대학교병원 웹서버] 
+       │ (1) 23개과 의사식별자(dr_sid) 수합 (동시 4개 제한)
+       │ (2) 의사별 월간 스케줄 AJAX (docMonthlyScheduleAjax.do)
+       ▼
+[src/core/kuh-fetcher.js]  ─── 순수 Node.js https (Zero-dependency, WAF 방어 헤더)
+       ▼
+[src/core/kuh-parser.js]   ─── KST(UTC+9) 보정, 2주치(이번주+다음주) 매트릭스 생성, 플래그 정밀 분석
+       ▼
+[api/schedule.js]          ─── Vercel Serverless (당일 메모리 캐시 + Vercel CDN 1시간 캐시)
+       ▼
+[public/index.html]        ─── 단일 파일 반응형 PWA (Vanilla JS + Tailwind CDN, 무빌드 구동)
+```
+
+### 3단계 데이터 폴백(Fallback) 안전망
+1. **1순위 (실시간)**: `/api/schedule` (당일 아침 첫 직원이 접속 시 병원 API 1회 수합 후 CDN 캐싱 서빙)
+2. **2순위 (정적 빌드)**: `/data/schedule.json` (CLI 사전 수합 데이터)
+3. **3순위 (인라인 목업)**: 네트워크 완전 단절 시 프론트엔드 비상용 목업 렌더링
+
+---
+
+## 2. 🚨 5대 하드코딩 엔지니어링 철칙 (Strict Constraints)
+
+후속 작업 시 아래 5개 규칙은 **절대 수정하거나 우회하지 마십시오.**
+
+1. **Zero External Dependencies (외부 패키지 설치 금지)**
+   - `node_modules` 없이 Node.js 내장 모듈(`https`, `http`, `fs`, `path`)만으로 구동됩니다.
+   - 편의를 위해 `cheerio`, `axios`, `puppeteer` 등을 설치하면 Vercel 번들 크기와 콜드 스타트가 악화되므로 일절 도입하지 않습니다.
+2. **WAF Rate Limiting 방어 (동시성 4개 엄수)**
+   - `kuh-fetcher.js`의 `mapConcurrent` 제한값(`limit = 4`)과 브라우저 위장 헤더를 유지해야 합니다.
+   - `Promise.all` 등으로 200여 건을 한꺼번에 호출하면 건국대병원 WAF에 IP가 차단되거나 Vercel 10초 타임아웃이 발생합니다.
+3. **도메인 휴진 플래그 판정 기준 (`kuh-parser.js`)**
+   - ⚠️ `endflag_cd: "01"` (`당일마감`): **정상 외래 진료**입니다. 인터넷 예약만 마감된 상태이므로 **절대 휴진 처리하면 안 됩니다.** (수정 시 핵심 주임교수 외래가 전멸함)
+   - 실제 휴진: `"02"`, `"03"`, `"04"`, `"05"`, `"06"`, `"19"`, `"20"` 코드 및 키워드(`/(휴진|휴가|반휴)/`)만 휴진(`closed: true`)으로 처리합니다.
+4. **KST (UTC+9) 강제 보정**
+   - Vercel Serverless Edge는 UTC 환경이므로 모든 날짜/요일 계산 시 `getKSTDateString()`의 오프셋 보정식을 거쳐야 요일 밀림 현상이 방지됩니다.
+5. **무빌드 단일 파일 UI 유지 (`public/index.html`)**
+   - React/Vite/Webpack 빌드 체인을 도입하지 않고 단일 HTML 내 바닐라 JS와 CDN을 유지하여 즉각적인 핫픽스 및 배포 무결성을 보장합니다.
+
+---
+
+## 3. 디렉토리 구조 및 핵심 모듈 명세
+
+| 경로 | 역할 및 핵심 기능 |
+| :--- | :--- |
+| `src/core/dept-config.js` | 23개 진료과 코드(`cd`) 및 약국 조제 난이도별 3대 티어(Tier 1~3), 고유 컬러 칩 SSOT |
+| `src/core/kuh-fetcher.js` | 브라우저 헤더 모방, 동시성 4개 제한 큐, 건대병원 의사 목록 및 월간 일정 수합 |
+| `src/core/kuh-parser.js` | 주간 날짜(`weekOffset: 0, 1`) 계산, 휴진 플래그 필터링, 주간/일별 통합 스케줄 매트릭스 빌드 |
+| `src/cli.js` | CLI 수합 스크립트(`--fetch`) 및 로컬 HTTP 프리뷰 서버(`--serve`, 포트 3000) |
+| `api/schedule.js` | Vercel 서버리스 엔드포인트 (당일 아침 1회 온디맨드 수합, CORS 지원, 캐시 무효화 지원) |
+| `public/index.html` | 반응형 듀얼 뷰 (PC 5x2 테이블 vs 모바일 요일 세그먼트 탭), 대형 티어 다중선택, 2주 스위처 |
+| `public/manifest.json` | PWA 표준 매니페스트 (`name: "건대외래일정"`, standalone 모드) |
+| `public/icon.png` | 모바일 홈 화면 고해상도 앱 아이콘 (192x192, 512x512) |
+| `scripts/` | 무결성 실사 도구군 (`check_flags.js`, `check_closed.js`, `audit_data.js` 등 5종) |
+
+---
+
+## 4. 로컬 개발, 빌드 및 배포 SOP
+
+### 로컬 개발 및 프리뷰
+```bash
+# 1. 로컬 데이터 갱신 및 프리뷰 서버 실행 (http://localhost:3000)
+node src/cli.js --serve
+
+# 2. 정적 데이터(public/data/schedule.json)만 1회 수합
+npm run build   # 또는 node src/cli.js
+```
+
+### 무결성 실측 진단 실행
+```bash
+# 휴진 플래그 및 정상진료 오분류 검증
+node scripts/check_flags.js
+node scripts/check_closed.js
+
+# 데이터 중복 및 인코딩 깨짐 검사
+node scripts/audit_data.js
+node scripts/check_corrupt.js
+```
+
+### Vercel 배포 및 캐시 강제 갱신
+* **배포**: Git 저장소 `main` 브랜치에 푸시하면 Vercel이 1분 이내에 자동 배포(CI/CD)합니다.
+* **캐시 수동 갱신**: URL 뒤에 `?refresh=true`를 붙여 호출하면 Vercel 메모리 캐시를 우회하여 최신 병원 데이터를 즉시 다시 긁어옵니다. (예: `https://kuh-workload-predictor.vercel.app/api/schedule?refresh=true`)
+
+---
+
+## 5. 긴급 장애 대응 매뉴얼 (Troubleshooting)
+
+1. **건대병원 웹사이트 개편으로 스케줄 수합이 0건으로 나오는 경우**:
+   - `scripts/check_real_api.js`를 실행하여 병원 AJAX 엔드포인트 URL 및 파라미터 규격이 바뀌었는지 확인합니다.
+   - `kuh-parser.js`의 `monthlyList` JSON 키값 매핑을 대조합니다.
+2. **특정 교수님이 진료 중인데 출근부에서 휴진(취소선)으로 표시되는 경우**:
+   - `node scripts/check_flags.js`를 실행하여 해당 교수의 원시 `endflag_cd`와 `endflag_nm`을 확인합니다.
+   - 신규 예약 마감 코드가 추가된 것이라면 `kuh-parser.js`의 `closedCodes` Set에서 해당 코드를 제외합니다.
+3. **Vercel Serverless Function 10초 타임아웃 에러**:
+   - 병원 서버 응답이 지연될 경우 발생할 수 있습니다. 3단계 폴백에 의해 이전 캐시가 정상 서빙되는지 확인하고, 필요 시 로컬에서 `node src/cli.js`를 실행해 정적 `schedule.json`을 Git에 푸시하여 정적 호스팅 모드로 전환합니다.
+
+---
+
+## 6. 인수인계 점검 체크리스트
+- [ ] 신규 AI 세션 시작 시 이 `HANDOVER.md`를 우선 참조했는가?
+- [ ] 외부 npm 라이브러리를 추가하지 않고 순수 표준 모듈을 유지했는가?
+- [ ] `endflag_cd: "01"`(당일마감)을 휴진 처리하지 않고 정상 진료로 보존했는가?
+- [ ] 동시성 제한(`limit=4`)과 WAF 모방 헤더를 건드리지 않았는가?
+- [ ] `index.html` 단일 파일 PWA 구조와 반응형 듀얼 뷰가 유지되었는가?
