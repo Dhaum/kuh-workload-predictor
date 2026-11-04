@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>건국대학교병원 외래 출근부</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💊</text></svg>">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💊</text></svg>">
+  <title>건대외래일정</title>
+  <link rel="icon" type="image/png" href="/icon.png">
+  <link rel="apple-touch-icon" href="/icon.png">
+  <link rel="manifest" href="/manifest.json">
   <!-- 모바일 웹앱 전체화면 모드 (주소창 숨기기 및 앱 스타일) -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="외래출근부">
+  <meta name="apple-mobile-web-app-title" content="건대외래일정">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#ffffff">
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
@@ -64,11 +65,9 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[var(--border)] gap-2">
       <div>
         <div class="flex items-center gap-2">
-          <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-blue-600/20 text-blue-600 font-black text-sm">KUH</span>
-          <h1 class="text-base sm:text-lg font-bold text-[var(--foreground)] tracking-tight">건국대병원 외래 출근부</h1>
-          <span class="px-2 py-0.5 text-[10px] sm:text-[11px] rounded-full bg-emerald-500/15 text-emerald-700 font-semibold">모바일 완벽 대응</span>
+          <img src="/icon.png" alt="KUH" class="w-8 h-8 rounded-lg shadow-sm border border-[var(--border)] object-cover">
+          <h1 class="text-lg sm:text-xl font-black text-[var(--foreground)] tracking-tight">건대외래일정</h1>
         </div>
-        <p class="text-[11px] sm:text-xs text-[var(--muted-foreground)] mt-0.5">간결한 이름·색상 뷰 · 티어별 점선 분할 · 특정 날짜 출근부</p>
       </div>
 
       <!-- Action Buttons & Tabs -->
@@ -88,22 +87,22 @@
     </div>
 
     <!-- TIERED FILTER PANEL (no-print) -->
-    <div class="my-2.5 sm:my-3 p-2.5 sm:p-3 rounded-xl bg-[var(--background)] border border-[var(--border)] space-y-2 text-xs no-print shadow-sm">
-      <div class="flex items-center justify-between pb-1.5 border-b border-[var(--border)] flex-wrap gap-1.5">
-        <span class="font-bold text-[var(--foreground)] flex items-center gap-1 text-[11px] sm:text-xs">
+    <div class="my-2.5 sm:my-3 p-3 sm:p-3.5 rounded-xl bg-[var(--background)] border border-[var(--border)] space-y-2.5 text-xs no-print shadow-sm">
+      <div class="flex items-center justify-between pb-2 border-b border-[var(--border)] flex-wrap gap-2">
+        <span class="font-bold text-[var(--foreground)] flex items-center gap-1.5 text-xs sm:text-sm">
           <span>🔍 진료과 필터</span>
         </span>
-        <div class="flex items-center gap-1 flex-wrap">
-          <button onclick="applyPreset('core')" class="px-2 py-0.5 rounded bg-blue-600/10 text-blue-600 font-bold hover:bg-blue-600/20 text-[11px]">
-            ⚡ Tier 1만
+        <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+          <button onclick="toggleTierFilter('tier1')" id="btnTier1" class="px-3.5 sm:px-4 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all border shadow-sm">
+            Tier 1
           </button>
-          <button onclick="applyPreset('tier12')" class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-600 font-bold hover:bg-indigo-500/20 text-[11px]">
-            ⚡ Tier 1+2
+          <button onclick="toggleTierFilter('tier2')" id="btnTier2" class="px-3.5 sm:px-4 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all border shadow-sm">
+            Tier 2
           </button>
-          <button onclick="applyPreset('all')" class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 font-bold hover:bg-emerald-500/20 text-[11px]">
-            ⚡ 전과 전체
+          <button onclick="toggleTierFilter('tier3')" id="btnTier3" class="px-3.5 sm:px-4 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all border shadow-sm">
+            Tier 3
           </button>
-          <button onclick="applyPreset('none')" class="px-2 py-0.5 rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)] text-[11px]">
+          <button onclick="resetFilters()" id="btnReset" class="px-3 sm:px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-[var(--muted-foreground)] hover:text-[var(--foreground)] border border-[var(--border)] hover:bg-[var(--card)] transition-all">
             초기화
           </button>
         </div>
@@ -111,54 +110,51 @@
 
       <!-- Tier 1 -->
       <div class="flex items-start gap-1.5 sm:gap-2">
-        <div class="w-20 sm:w-24 shrink-0 flex items-center justify-between pt-0.5">
-          <span class="font-bold text-purple-700 text-[11px] sm:text-xs">Tier 1 (고난도)</span>
-          <button onclick="toggleTierGroup('tier1')" class="text-[10px] text-[var(--muted-foreground)] hover:underline">토글</button>
+        <div class="w-16 sm:w-20 shrink-0 pt-0.5">
+          <span class="font-bold text-purple-700 text-xs sm:text-sm">Tier 1</span>
         </div>
         <div class="flex flex-wrap gap-1">
-          <button onclick="toggleDept('neuro')" id="flt-neuro" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-neuro text-[11px]">✓ 신경과</button>
-          <button onclick="toggleDept('endo')" id="flt-endo" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-endo text-[11px]">✓ 내분비내과</button>
-          <button onclick="toggleDept('cardio')" id="flt-cardio" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-cardio text-[11px]">✓ 심장혈관내과</button>
-          <button onclick="toggleDept('nephro')" id="flt-nephro" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-nephro text-[11px]">✓ 신장내과</button>
+          <button onclick="toggleDept('neuro')" id="flt-neuro" class="px-2 py-0.5 rounded font-semibold chip-neuro text-xs">✓ 신경과</button>
+          <button onclick="toggleDept('endo')" id="flt-endo" class="px-2 py-0.5 rounded font-semibold chip-endo text-xs">✓ 내분비내과</button>
+          <button onclick="toggleDept('cardio')" id="flt-cardio" class="px-2 py-0.5 rounded font-semibold chip-cardio text-xs">✓ 심장혈관내과</button>
+          <button onclick="toggleDept('nephro')" id="flt-nephro" class="px-2 py-0.5 rounded font-semibold chip-nephro text-xs">✓ 신장내과</button>
         </div>
       </div>
 
       <!-- Tier 2 -->
-      <div class="flex items-start gap-1.5 sm:gap-2 pt-1 border-t border-[var(--border)]/60">
-        <div class="w-20 sm:w-24 shrink-0 flex items-center justify-between pt-0.5">
-          <span class="font-bold text-sky-700 text-[11px] sm:text-xs">Tier 2 (주요과)</span>
-          <button onclick="toggleTierGroup('tier2')" class="text-[10px] text-[var(--muted-foreground)] hover:underline">토글</button>
+      <div class="flex items-start gap-1.5 sm:gap-2 pt-1.5 border-t border-[var(--border)]/60">
+        <div class="w-16 sm:w-20 shrink-0 pt-0.5">
+          <span class="font-bold text-sky-700 text-xs sm:text-sm">Tier 2</span>
         </div>
         <div class="flex flex-wrap gap-1">
-          <button onclick="toggleDept('onco')" id="flt-onco" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-onco opacity-30 grayscale text-[11px]">+ 종양혈액</button>
-          <button onclick="toggleDept('pulmo')" id="flt-pulmo" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-pulmo opacity-30 grayscale text-[11px]">+ 호흡기</button>
-          <button onclick="toggleDept('rheum')" id="flt-rheum" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-rheum opacity-30 grayscale text-[11px]">+ 류마티스</button>
-          <button onclick="toggleDept('ortho')" id="flt-ortho" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-ortho opacity-30 grayscale text-[11px]">+ 정형외과</button>
-          <button onclick="toggleDept('ns')" id="flt-ns" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-ns opacity-30 grayscale text-[11px]">+ 신경외과</button>
-          <button onclick="toggleDept('gi')" id="flt-gi" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-gi opacity-30 grayscale text-[11px]">+ 소화기</button>
-          <button onclick="toggleDept('cs')" id="flt-cs" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-cs opacity-30 grayscale text-[11px]">+ 흉부외과</button>
+          <button onclick="toggleDept('onco')" id="flt-onco" class="px-2 py-0.5 rounded font-semibold chip-onco opacity-30 grayscale text-xs">+ 종양혈액</button>
+          <button onclick="toggleDept('pulmo')" id="flt-pulmo" class="px-2 py-0.5 rounded font-semibold chip-pulmo opacity-30 grayscale text-xs">+ 호흡기</button>
+          <button onclick="toggleDept('rheum')" id="flt-rheum" class="px-2 py-0.5 rounded font-semibold chip-rheum opacity-30 grayscale text-xs">+ 류마티스</button>
+          <button onclick="toggleDept('ortho')" id="flt-ortho" class="px-2 py-0.5 rounded font-semibold chip-ortho opacity-30 grayscale text-xs">+ 정형외과</button>
+          <button onclick="toggleDept('ns')" id="flt-ns" class="px-2 py-0.5 rounded font-semibold chip-ns opacity-30 grayscale text-xs">+ 신경외과</button>
+          <button onclick="toggleDept('gi')" id="flt-gi" class="px-2 py-0.5 rounded font-semibold chip-gi opacity-30 grayscale text-xs">+ 소화기</button>
+          <button onclick="toggleDept('cs')" id="flt-cs" class="px-2 py-0.5 rounded font-semibold chip-cs opacity-30 grayscale text-xs">+ 흉부외과</button>
         </div>
       </div>
 
       <!-- Tier 3 -->
-      <div class="flex items-start gap-1.5 sm:gap-2 pt-1 border-t border-[var(--border)]/60">
-        <div class="w-20 sm:w-24 shrink-0 flex items-center justify-between pt-0.5">
-          <span class="font-bold text-slate-500 text-[11px] sm:text-xs">Tier 3 (일반)</span>
-          <button onclick="toggleTierGroup('tier3')" class="text-[10px] text-[var(--muted-foreground)] hover:underline">토글</button>
+      <div class="flex items-start gap-1.5 sm:gap-2 pt-1.5 border-t border-[var(--border)]/60">
+        <div class="w-16 sm:w-20 shrink-0 pt-0.5">
+          <span class="font-bold text-slate-500 text-xs sm:text-sm">Tier 3</span>
         </div>
         <div class="flex flex-wrap gap-1">
-          <button onclick="toggleDept('pain')" id="flt-pain" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-pain opacity-30 grayscale text-[11px]">+ 통증</button>
-          <button onclick="toggleDept('uro')" id="flt-uro" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-uro opacity-30 grayscale text-[11px]">+ 비뇨</button>
-          <button onclick="toggleDept('oph')" id="flt-oph" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-oph opacity-30 grayscale text-[11px]">+ 안과</button>
-          <button onclick="toggleDept('ent')" id="flt-ent" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-ent opacity-30 grayscale text-[11px]">+ 이비인후</button>
-          <button onclick="toggleDept('derma')" id="flt-derma" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-derma opacity-30 grayscale text-[11px]">+ 피부</button>
-          <button onclick="toggleDept('psych')" id="flt-psych" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-psych opacity-30 grayscale text-[11px]">+ 정신</button>
-          <button onclick="toggleDept('fm')" id="flt-fm" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-fm opacity-30 grayscale text-[11px]">+ 가정</button>
-          <button onclick="toggleDept('gs')" id="flt-gs" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-gs opacity-30 grayscale text-[11px]">+ 외과</button>
-          <button onclick="toggleDept('obgy')" id="flt-obgy" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-obgy opacity-30 grayscale text-[11px]">+ 산부인과</button>
-          <button onclick="toggleDept('pedia')" id="flt-pedia" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-pedia opacity-30 grayscale text-[11px]">+ 소아</button>
-          <button onclick="toggleDept('rm')" id="flt-rm" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-rm opacity-30 grayscale text-[11px]">+ 재활</button>
-          <button onclick="toggleDept('inf')" id="flt-inf" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold chip-inf opacity-30 grayscale text-[11px]">+ 감염</button>
+          <button onclick="toggleDept('pain')" id="flt-pain" class="px-2 py-0.5 rounded font-semibold chip-pain opacity-30 grayscale text-xs">+ 통증</button>
+          <button onclick="toggleDept('uro')" id="flt-uro" class="px-2 py-0.5 rounded font-semibold chip-uro opacity-30 grayscale text-xs">+ 비뇨</button>
+          <button onclick="toggleDept('oph')" id="flt-oph" class="px-2 py-0.5 rounded font-semibold chip-oph opacity-30 grayscale text-xs">+ 안과</button>
+          <button onclick="toggleDept('ent')" id="flt-ent" class="px-2 py-0.5 rounded font-semibold chip-ent opacity-30 grayscale text-xs">+ 이비인후</button>
+          <button onclick="toggleDept('derma')" id="flt-derma" class="px-2 py-0.5 rounded font-semibold chip-derma opacity-30 grayscale text-xs">+ 피부</button>
+          <button onclick="toggleDept('psych')" id="flt-psych" class="px-2 py-0.5 rounded font-semibold chip-psych opacity-30 grayscale text-xs">+ 정신</button>
+          <button onclick="toggleDept('fm')" id="flt-fm" class="px-2 py-0.5 rounded font-semibold chip-fm opacity-30 grayscale text-xs">+ 가정</button>
+          <button onclick="toggleDept('gs')" id="flt-gs" class="px-2 py-0.5 rounded font-semibold chip-gs opacity-30 grayscale text-xs">+ 외과</button>
+          <button onclick="toggleDept('obgy')" id="flt-obgy" class="px-2 py-0.5 rounded font-semibold chip-obgy opacity-30 grayscale text-xs">+ 산부인과</button>
+          <button onclick="toggleDept('pedia')" id="flt-pedia" class="px-2 py-0.5 rounded font-semibold chip-pedia opacity-30 grayscale text-xs">+ 소아</button>
+          <button onclick="toggleDept('rm')" id="flt-rm" class="px-2 py-0.5 rounded font-semibold chip-rm opacity-30 grayscale text-xs">+ 재활</button>
+          <button onclick="toggleDept('inf')" id="flt-inf" class="px-2 py-0.5 rounded font-semibold chip-inf opacity-30 grayscale text-xs">+ 감염</button>
         </div>
       </div>
     </div>
@@ -166,6 +162,23 @@
     <!-- VIEW 1: WEEKLY VIEW (HYBRID: Desktop Table + Mobile Day-Card) -->
     <div id="viewWeekly" class="space-y-3">
       
+      <!-- Week Switcher (이번주 / 다음주 미리보기) -->
+      <div class="flex items-center justify-between pb-1 flex-wrap gap-2 no-print">
+        <div class="inline-flex bg-[var(--background)] p-1 rounded-xl border border-[var(--border)] text-xs shadow-sm w-full sm:w-auto">
+          <button onclick="switchWeekOffset(0)" id="btnWeekThis" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-bold bg-blue-600 text-white shadow-sm transition-all text-xs sm:text-sm">
+            이번주 (<span id="labelThisWeek">11/2 - 11/6</span>)
+          </button>
+          <button onclick="switchWeekOffset(1)" id="btnWeekNext" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all text-xs sm:text-sm">
+            🔮 다음주 미리보기 (<span id="labelNextWeek">11/9 - 11/13</span>)
+          </button>
+        </div>
+        <div id="weekStatusBadge" class="hidden sm:flex items-center">
+          <span class="px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-600 font-bold text-xs">
+            ● 이번주 외래 진료 일정
+          </span>
+        </div>
+      </div>
+
       <!-- 1-A: MOBILE EXCLUSIVE DAY-PICKER CARD VIEW (< sm 화면) -->
       <div id="viewWeeklyMobile" class="block sm:hidden space-y-2.5">
         <!-- Day Selector Tabs (월 | 화 | 수 | 목[오늘] | 금) -->
@@ -327,7 +340,8 @@
     });
 
     let currentScheduleData = null;
-    let selectedMobileDay = '목';
+    let selectedMobileDay = '월';
+    let currentWeekOffset = 0; // 0: 이번주, 1: 다음주
 
     async function fetchScheduleData(forceRefresh = false) {
       const btn = document.getElementById('btnRefresh');
@@ -351,7 +365,9 @@
 
       if (btn) btn.innerText = '⟳ 새로고침';
       initToday();
+      updateWeekLabels();
       renderAll();
+      updateFiltersUI();
     }
 
     function initToday() {
@@ -365,22 +381,93 @@
       }
     }
 
+    function updateWeekLabels() {
+      if (!currentScheduleData) return;
+      const tw = currentScheduleData.weekDays;
+      const nw = currentScheduleData.nextWeekDays;
+
+      if (tw && tw.length >= 5) {
+        const tStart = tw[0].label.replace('월 (', '').replace(')', '');
+        const tEnd = tw[4].label.replace('금 (', '').replace(')', '');
+        const el = document.getElementById('labelThisWeek');
+        if (el) el.innerText = `${tStart} - ${tEnd}`;
+      }
+      if (nw && nw.length >= 5) {
+        const nStart = nw[0].label.replace('월 (', '').replace(')', '');
+        const nEnd = nw[4].label.replace('금 (', '').replace(')', '');
+        const el = document.getElementById('labelNextWeek');
+        if (el) el.innerText = `${nStart} - ${nEnd}`;
+      }
+    }
+
+    function getActiveWeekData() {
+      if (!currentScheduleData) {
+        return { weekDays: [], weekly: { AM: {}, PM: {} }, isNextWeek: false };
+      }
+      if (currentWeekOffset === 1 && currentScheduleData.nextWeekly) {
+        return {
+          weekDays: currentScheduleData.nextWeekDays || [],
+          weekly: currentScheduleData.nextWeekly || { AM: {}, PM: {} },
+          isNextWeek: true
+        };
+      }
+      return {
+        weekDays: currentScheduleData.weekDays || [],
+        weekly: currentScheduleData.weekly || { AM: {}, PM: {} },
+        isNextWeek: false
+      };
+    }
+
+    function switchWeekOffset(offset) {
+      currentWeekOffset = offset;
+      const btnThis = document.getElementById('btnWeekThis');
+      const btnNext = document.getElementById('btnWeekNext');
+      const badge = document.getElementById('weekStatusBadge');
+
+      if (offset === 0) {
+        btnThis.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-bold bg-blue-600 text-white shadow-sm transition-all text-xs sm:text-sm';
+        btnNext.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all text-xs sm:text-sm';
+        if (badge) {
+          badge.innerHTML = '<span class="px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-600 font-bold text-xs">● 이번주 외래 진료 일정</span>';
+        }
+      } else {
+        btnNext.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-bold bg-indigo-600 text-white shadow-sm transition-all text-xs sm:text-sm';
+        btnThis.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all text-xs sm:text-sm';
+        if (badge) {
+          badge.innerHTML = '<span class="px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-600 font-bold text-xs">🔮 다음주 출근부 미리보기</span>';
+        }
+      }
+
+      renderCurrentWeek();
+    }
+
     function renderAll() {
       if (!currentScheduleData) return;
 
       const updateEl = document.getElementById('updatedAtText');
       if (updateEl) updateEl.innerText = `데이터 최신화: ${currentScheduleData.updatedAt || '방금 전'}`;
 
-      renderWeeklyHeader(currentScheduleData.weekDays);
-      renderWeeklyCells(currentScheduleData.weekly, currentScheduleData.weekDays);
-      renderMobileDayView();
-      renderDailyOptions(currentScheduleData.weekDays);
+      renderCurrentWeek();
+      renderDailyOptions(currentScheduleData.weekDays, currentScheduleData.nextWeekDays);
       renderDailyView(document.getElementById('dailyDatePicker').value);
     }
 
+    function renderCurrentWeek() {
+      const active = getActiveWeekData();
+      renderWeeklyHeader(active.weekDays, active.isNextWeek);
+      renderWeeklyCells(active.weekly, active.weekDays);
+      renderMobileDayView(active);
+
+      const titleEl = document.getElementById('weekRangeTitle');
+      if (titleEl) {
+        titleEl.innerText = active.isNextWeek ? '다음주 외래 출근부 (미리보기)' : '이번주 외래 출근부';
+      }
+    }
+
     // DESKTOP: 주간 테이블 헤더
-    function renderWeeklyHeader(weekDays) {
+    function renderWeeklyHeader(weekDays, isNextWeek = false) {
       const thead = document.getElementById('weeklyThead');
+      if (!thead) return;
       let html = '<th class="p-2.5 w-16 text-center font-semibold">시간</th>';
 
       const now = new Date();
@@ -388,8 +475,8 @@
       const dayNames = ['일','월','화','수','목','금','토'];
       const todayDayName = dayNames[now.getDay()];
 
-      weekDays.forEach((w, idx) => {
-        const isToday = (w.dateStr === todayStr) || (w.dayName === todayDayName);
+      weekDays.forEach((w) => {
+        const isToday = !isNextWeek && ((w.dateStr === todayStr) || (w.dayName === todayDayName));
         const todayClass = isToday ? 'bg-blue-500/10 ring-2 ring-blue-500/40 text-blue-700 font-bold' : '';
         html += `
           <th class="p-2.5 w-1/5 font-semibold border-l border-[var(--border)] cursor-pointer hover:bg-blue-500/10 transition-colors ${todayClass}" onclick="selectDailyDate('${w.dateStr}')">
@@ -448,11 +535,11 @@
     // MOBILE: 요일별 세그먼트 탭 선택 및 카드 렌더링 (< sm 전용)
     function selectMobileDay(dayName) {
       selectedMobileDay = dayName;
-      renderMobileDayView();
+      renderMobileDayView(getActiveWeekData());
     }
 
-    function renderMobileDayView() {
-      if (!currentScheduleData || !currentScheduleData.weekly) return;
+    function renderMobileDayView(activeWeek = getActiveWeekData()) {
+      if (!activeWeek || !activeWeek.weekly) return;
 
       const dayNames = ['월', '화', '수', '목', '금'];
       const now = new Date();
@@ -462,10 +549,11 @@
         const btn = document.getElementById(`mTab-${d}`);
         if (!btn) return;
         const isSelected = (d === selectedMobileDay);
-        const isToday = (d === todayDayName);
+        const isToday = !activeWeek.isNextWeek && (d === todayDayName);
 
         if (isSelected) {
-          btn.className = 'py-1.5 rounded-lg font-bold bg-blue-600 text-white shadow-sm';
+          const activeBg = activeWeek.isNextWeek ? 'bg-indigo-600' : 'bg-blue-600';
+          btn.className = `py-1.5 rounded-lg font-bold ${activeBg} text-white shadow-sm`;
           btn.innerHTML = `${d}${isToday ? ' <span class="text-[9px] px-1 bg-white text-blue-600 rounded">오늘</span>' : ''}`;
         } else {
           btn.className = `py-1.5 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] ${isToday ? 'border border-blue-500/50 text-blue-600 font-bold' : ''}`;
@@ -475,7 +563,11 @@
 
       const titleEl = document.getElementById('mCardTitle');
       if (titleEl) {
-        titleEl.innerText = `${selectedMobileDay}요일 외래 일정 ${selectedMobileDay === todayDayName ? '(오늘)' : ''}`;
+        const curDayObj = activeWeek.weekDays.find(w => w.dayName === selectedMobileDay);
+        const dayLabel = curDayObj ? curDayObj.label : `${selectedMobileDay}요일`;
+        const prefix = activeWeek.isNextWeek ? '[다음주] ' : '';
+        const todaySuffix = (!activeWeek.isNextWeek && selectedMobileDay === todayDayName) ? ' (오늘)' : '';
+        titleEl.innerText = `${prefix}${dayLabel} 외래 일정${todaySuffix}`;
       }
 
       ['AM', 'PM'].forEach(slot => {
@@ -483,7 +575,7 @@
         const el = document.getElementById(targetId);
         if (!el) return;
 
-        const docs = (currentScheduleData.weekly[slot] && currentScheduleData.weekly[slot][selectedMobileDay]) || [];
+        const docs = (activeWeek.weekly[slot] && activeWeek.weekly[slot][selectedMobileDay]) || [];
         
         const tier1Docs = docs.filter(d => activeDepts[d.deptKey] && tierMapping.tier1.includes(d.deptKey));
         const tier2Docs = docs.filter(d => activeDepts[d.deptKey] && tierMapping.tier2.includes(d.deptKey));
@@ -518,18 +610,31 @@
     }
 
     // 일별 상세 뷰
-    function renderDailyOptions(weekDays) {
+    function renderDailyOptions(weekDays = [], nextWeekDays = []) {
       const sel = document.getElementById('dailyDatePicker');
-      if (sel.options.length > 0) return;
+      if (!sel || sel.options.length > 0) return;
 
       const now = new Date();
       const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
       
       let html = '';
-      weekDays.forEach(w => {
-        const isToday = w.dateStr === todayStr;
-        html += `<option value="${w.dateStr}" ${isToday ? 'selected' : ''}>${w.dateStr.slice(0,4)}년 ${w.label}요일</option>`;
-      });
+      if (weekDays.length > 0) {
+        html += '<optgroup label="이번주 외래">';
+        weekDays.forEach(w => {
+          const isToday = w.dateStr === todayStr;
+          html += `<option value="${w.dateStr}" ${isToday ? 'selected' : ''}>${w.dateStr.slice(0,4)}년 ${w.label}요일 ${isToday ? '(오늘)' : ''}</option>`;
+        });
+        html += '</optgroup>';
+      }
+
+      if (nextWeekDays.length > 0) {
+        html += '<optgroup label="다음주 외래 (미리보기)">';
+        nextWeekDays.forEach(w => {
+          html += `<option value="${w.dateStr}">${w.dateStr.slice(0,4)}년 다음주 ${w.label}요일</option>`;
+        });
+        html += '</optgroup>';
+      }
+
       sel.innerHTML = html;
     }
 
@@ -584,23 +689,27 @@
       updateFiltersUI();
     }
 
-    function toggleTierGroup(tierKey) {
-      const list = tierMapping[tierKey];
-      const allActive = list.every(d => activeDepts[d]);
-      list.forEach(d => activeDepts[d] = !allActive);
+    // 티어 버튼 다중 선택 토글 (Tier 1 / Tier 2 / Tier 3)
+    function toggleTierFilter(tierKey) {
+      const depts = tierMapping[tierKey];
+      const allActive = depts.every(d => activeDepts[d]);
+      // 해당 티어가 다 켜져 있으면 끄고, 아니면 켬!
+      depts.forEach(d => {
+        activeDepts[d] = !allActive;
+      });
       updateFiltersUI();
     }
 
-    function applyPreset(mode) {
-      const all = Object.keys(activeDepts);
-      if (mode === 'core') all.forEach(d => activeDepts[d] = tierMapping.tier1.includes(d));
-      else if (mode === 'tier12') all.forEach(d => activeDepts[d] = (tierMapping.tier1.includes(d) || tierMapping.tier2.includes(d)));
-      else if (mode === 'all') all.forEach(d => activeDepts[d] = true);
-      else if (mode === 'none') all.forEach(d => activeDepts[d] = false);
+    function resetFilters() {
+      // 모든 진료과 비활성화
+      Object.keys(activeDepts).forEach(d => {
+        activeDepts[d] = false;
+      });
       updateFiltersUI();
     }
 
     function updateFiltersUI() {
+      // 1. 개별 진료과 칩 업데이트
       for (const k in activeDepts) {
         const btn = document.getElementById(`flt-${k}`);
         if (!btn) continue;
@@ -614,13 +723,41 @@
         }
       }
 
-      if (currentScheduleData && currentScheduleData.weekly) {
-        renderWeeklyCells(currentScheduleData.weekly, currentScheduleData.weekDays);
-        renderMobileDayView();
-      }
+      // 2. 상단 큰 티어 버튼 활성/비활성 스타일 동적 업데이트
+      updateTierButtonState('tier1', 'btnTier1', 'purple');
+      updateTierButtonState('tier2', 'btnTier2', 'sky');
+      updateTierButtonState('tier3', 'btnTier3', 'slate');
 
-      const dateKey = document.getElementById('dailyDatePicker').value;
+      // 3. 화면 재렌더링
+      renderCurrentWeek();
+
+      const dateKey = document.getElementById('dailyDatePicker')?.value;
       if (dateKey) renderDailyView(dateKey);
+    }
+
+    function updateTierButtonState(tierKey, btnId, color) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      const depts = tierMapping[tierKey];
+      const anyActive = depts.some(d => activeDepts[d]);
+
+      if (anyActive) {
+        if (color === 'purple') {
+          btn.className = 'px-3.5 sm:px-4 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all border shadow-sm bg-purple-600 text-white border-purple-600 ring-2 ring-purple-600/30';
+        } else if (color === 'sky') {
+          btn.className = 'px-3.5 sm:px-4 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all border shadow-sm bg-sky-600 text-white border-sky-600 ring-2 ring-sky-600/30';
+        } else {
+          btn.className = 'px-3.5 sm:px-4 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all border shadow-sm bg-slate-700 text-white border-slate-700 ring-2 ring-slate-700/30';
+        }
+      } else {
+        if (color === 'purple') {
+          btn.className = 'px-3.5 sm:px-4 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all border bg-[var(--card)] text-purple-700 border-purple-300 hover:bg-purple-50';
+        } else if (color === 'sky') {
+          btn.className = 'px-3.5 sm:px-4 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all border bg-[var(--card)] text-sky-700 border-sky-300 hover:bg-sky-50';
+        } else {
+          btn.className = 'px-3.5 sm:px-4 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all border bg-[var(--card)] text-slate-700 border-slate-300 hover:bg-slate-100';
+        }
+      }
     }
 
     function switchView(mode) {
@@ -648,7 +785,8 @@
     }
 
     function selectDailyDate(dateStr) {
-      document.getElementById('dailyDatePicker').value = dateStr;
+      const sel = document.getElementById('dailyDatePicker');
+      if (sel) sel.value = dateStr;
       switchView('daily');
     }
 
@@ -666,6 +804,13 @@
           { dateStr: '20261105', dayName: '목', label: '목 (11/5)' },
           { dateStr: '20261106', dayName: '금', label: '금 (11/6)' }
         ],
+        nextWeekDays: [
+          { dateStr: '20261109', dayName: '월', label: '월 (11/9)' },
+          { dateStr: '20261110', dayName: '화', label: '화 (11/10)' },
+          { dateStr: '20261111', dayName: '수', label: '수 (11/11)' },
+          { dateStr: '20261112', dayName: '목', label: '목 (11/12)' },
+          { dateStr: '20261113', dayName: '금', label: '금 (11/13)' }
+        ],
         weekly: {
           AM: {
             '월': [{ deptKey: 'neuro', name: '김한영', chipClass: 'chip-neuro' }],
@@ -679,6 +824,22 @@
             '화': [{ deptKey: 'endo', name: '박경수', chipClass: 'chip-endo' }],
             '수': [{ deptKey: 'neuro', name: '김동욱', chipClass: 'chip-neuro' }],
             '목': [{ deptKey: 'neuro', name: '김동욱', chipClass: 'chip-neuro', isClosed: true, closedReason: '오후반휴' }],
+            '금': [{ deptKey: 'cardio', name: '신제욱', chipClass: 'chip-cardio' }]
+          }
+        },
+        nextWeekly: {
+          AM: {
+            '월': [{ deptKey: 'neuro', name: '김한영', chipClass: 'chip-neuro' }],
+            '화': [{ deptKey: 'neuro', name: '문연실', chipClass: 'chip-neuro' }],
+            '수': [{ deptKey: 'neuro', name: '한설희', chipClass: 'chip-neuro' }],
+            '목': [{ deptKey: 'neuro', name: '장재원', chipClass: 'chip-neuro' }],
+            '금': [{ deptKey: 'neuro', name: '김다영', chipClass: 'chip-neuro' }]
+          },
+          PM: {
+            '월': [{ deptKey: 'neuro', name: '박정진', chipClass: 'chip-neuro' }],
+            '화': [{ deptKey: 'endo', name: '박경수', chipClass: 'chip-endo' }],
+            '수': [{ deptKey: 'neuro', name: '김동욱', chipClass: 'chip-neuro' }],
+            '목': [{ deptKey: 'neuro', name: '김동욱', chipClass: 'chip-neuro' }],
             '금': [{ deptKey: 'cardio', name: '신제욱', chipClass: 'chip-cardio' }]
           }
         },

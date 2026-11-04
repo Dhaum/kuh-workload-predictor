@@ -30,8 +30,10 @@ function getKSTDateString(d = new Date()) {
 
 /**
  * 주어진 날짜가 속한 주의 월~금 날짜 목록 반환 (YYYYMMDD 형식)
+ * @param {Date} referenceDate 기준 일자
+ * @param {number} weekOffset 0: 이번주, 1: 다음주, -1: 지난주
  */
-function getWeekDays(referenceDate = new Date()) {
+function getWeekDays(referenceDate = new Date(), weekOffset = 0) {
   const utc = referenceDate.getTime() + (referenceDate.getTimezoneOffset() * 60000);
   const kst = new Date(utc + (9 * 3600000));
   const day = kst.getDay(); // 0(일) ~ 6(토)
@@ -39,7 +41,7 @@ function getWeekDays(referenceDate = new Date()) {
   // 이번 주 월요일 계산 (일요일이면 다음날 월요일)
   const diffToMon = day === 0 ? 1 : 1 - day;
   const monday = new Date(kst);
-  monday.setDate(kst.getDate() + diffToMon);
+  monday.setDate(kst.getDate() + diffToMon + (weekOffset * 7));
 
   const days = [];
   const dayNames = ['월', '화', '수', '목', '금'];
@@ -64,8 +66,10 @@ function getWeekDays(referenceDate = new Date()) {
 async function buildFullSchedule(deptList = ALL_DEPTS) {
   const kst = getKSTDateString();
   const yyyymm01 = `${kst.yyyymm}01`;
-  const weekDays = getWeekDays();
+  const weekDays = getWeekDays(new Date(), 0);
+  const nextWeekDays = getWeekDays(new Date(), 1);
   const weekDateSet = new Set(weekDays.map(w => w.dateStr));
+  const nextWeekDateSet = new Set(nextWeekDays.map(w => w.dateStr));
 
   console.log(`[KUH-Parser] 데이터 수합 시작: ${deptList.length}개 진료과 (기준: ${kst.formatted})`);
 
@@ -98,8 +102,12 @@ async function buildFullSchedule(deptList = ALL_DEPTS) {
     };
   }, 4);
 
-  // 4. 데이터 정규화 및 주간/일별 매트릭스 구성
+  // 4. 데이터 정규화 및 주간/일별 매트릭스 구성 (이번주 + 다음주 동시 지원)
   const weekly = {
+    AM: { '월': [], '화': [], '수': [], '목': [], '금': [] },
+    PM: { '월': [], '화': [], '수': [], '목': [], '금': [] }
+  };
+  const nextWeekly = {
     AM: { '월': [], '화': [], '수': [], '목': [], '금': [] },
     PM: { '월': [], '화': [], '수': [], '목': [], '금': [] }
   };
@@ -136,7 +144,7 @@ async function buildFullSchedule(deptList = ALL_DEPTS) {
         closedReason
       };
 
-      // 1) 주간 매트릭스 집계
+      // 1) 이번주 매트릭스 집계
       if (weekDateSet.has(date)) {
         const dayObj = weekDays.find(w => w.dateStr === date);
         if (dayObj) {
@@ -144,7 +152,15 @@ async function buildFullSchedule(deptList = ALL_DEPTS) {
         }
       }
 
-      // 2) 일별 출근부 집계
+      // 2) 다음주 매트릭스 집계
+      if (nextWeekDateSet.has(date)) {
+        const dayObj = nextWeekDays.find(w => w.dateStr === date);
+        if (dayObj) {
+          nextWeekly[timeSlot][dayObj.dayName].push(docRecord);
+        }
+      }
+
+      // 3) 일별 출근부 집계
       if (!daily[date]) {
         daily[date] = { AM: [], PM: [] };
       }
@@ -156,7 +172,9 @@ async function buildFullSchedule(deptList = ALL_DEPTS) {
     updatedAt: kst.formatted,
     updatedDateOnly: kst.dateOnly,
     weekDays,
+    nextWeekDays,
     weekly,
+    nextWeekly,
     daily
   };
 
