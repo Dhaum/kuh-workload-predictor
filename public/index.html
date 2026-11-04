@@ -81,7 +81,7 @@
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid rgba(226, 232, 240, 0.85);
-      padding-top: max(0.625rem, calc(0.625rem + env(safe-area-inset-top)));
+      padding-top: calc(0.625rem + env(safe-area-inset-top, 0px)) !important;
     }
 
     /* 카드 입체감 & 부드러운 그림자 */
@@ -289,7 +289,7 @@
   <div>
 
 <!-- HEADER / NAVIGATION (Stageshow Frosted Chrome) -->
-    <header class="stageshow-glass sticky top-0 z-30 px-3 sm:px-6 py-2.5 transition-all">
+    <header class="stageshow-glass sticky top-0 z-30 px-3 sm:px-6 pb-2.5 transition-all" style="padding-top: calc(0.625rem + env(safe-area-inset-top, 0px)) !important;">
       <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
         
         <!-- Brand & Title & Mobile Dark Toggle -->
