@@ -492,6 +492,18 @@
             <button onclick="selectMobileDay('금')" id="mTab-금" class="py-1.5 rounded-lg transition-all">금</button>
           </div>
 
+          <!-- 17:00 이후 내일 외래 자동 표시 안내 바 (안전장치 & 원터치 복귀) -->
+          <div id="tomorrowNoticeBar" class="hidden flex items-center justify-between px-3 py-2 rounded-xl bg-indigo-50/95 dark:bg-indigo-950/70 border border-indigo-200/80 dark:border-indigo-800/80 text-xs text-indigo-900 dark:text-indigo-200 font-semibold shadow-2xs transition-all">
+            <div class="flex items-center gap-1.5">
+              <span class="text-sm">🌙</span>
+              <span id="tomorrowNoticeText">내일(금) 외래 일정 자동 표시 중</span>
+            </div>
+            <button onclick="revertToTodayFocus()" class="px-2.5 py-1 rounded-lg bg-white dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200 border border-indigo-300 dark:border-indigo-700 font-bold hover:bg-indigo-50 dark:hover:bg-indigo-800 text-[11px] shadow-2xs transition-all flex items-center gap-0.5 active:scale-95">
+              <span id="revertBtnText">오늘 외래 보기</span>
+              <span>↩</span>
+            </button>
+          </div>
+
           <!-- Swipable Day Schedule Card -->
           <div id="mobileCardContainer" class="stageshow-card rounded-2xl p-4 shadow-sm space-y-3.5 swipe-container relative">
             <div class="flex items-center justify-between pb-2.5 border-b border-slate-100">
@@ -721,6 +733,14 @@
     let currentWeekOffset = 0; // 0: 이번주, 1: 다음주
     let quickSearchQuery = ''; // 교수명 즉시 찾기 검색어
 
+    // 17:00 이후 내일 외래 자동 포커스 상태 관리
+    let hasUserOverriddenFocus = false;
+    let isTomorrowAutoActive = false;
+    let realTodayDayName = '월';
+    let tomorrowDayName = '';
+    let autoNoticeMessage = '';
+    let autoRevertButtonText = '오늘 외래 보기';
+
     // 교수명 빠른 찾기 토글 및 핸들러
     function toggleQuickSearch() {
       const bar = document.getElementById('quickSearchBar');
@@ -882,15 +902,101 @@
       updateFiltersUI();
     }
 
-    function initToday() {
+    function getKSTInfo() {
       const now = new Date();
+      const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+      const kst = new Date(utc + (9 * 3600000));
       const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-      const todayDay = dayNames[now.getDay()];
-      if (['월', '화', '수', '목', '금'].includes(todayDay)) {
-        selectedMobileDay = todayDay;
-      } else {
-        selectedMobileDay = '월';
+      return {
+        date: kst,
+        hour: kst.getHours(),
+        dayIdx: kst.getDay(),
+        dayName: dayNames[kst.getDay()]
+      };
+    }
+
+    function initToday() {
+      const kst = getKSTInfo();
+      realTodayDayName = ['월', '화', '수', '목', '금'].includes(kst.dayName) ? kst.dayName : '월';
+
+      if (hasUserOverriddenFocus) {
+        return; // 세션 내 수동 조작 기억 (무한 핑퐁/하이재킹 방지)
       }
+
+      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+
+      // 1) 평일 월~목 17:00 이후 외래 마감 -> 내일 외래 자동 포커스
+      if (kst.hour >= 17 && kst.dayIdx >= 1 && kst.dayIdx <= 4) {
+        tomorrowDayName = dayNames[kst.dayIdx + 1];
+        selectedMobileDay = tomorrowDayName;
+        currentWeekOffset = 0;
+        isTomorrowAutoActive = true;
+        autoNoticeMessage = `내일(${tomorrowDayName}) 외래 일정 자동 표시 중`;
+        autoRevertButtonText = `오늘(${realTodayDayName}) 외래 보기`;
+      }
+      // 2) 금요일 17:00 이후 -> 다음주 월요일 미리보기 자동 포커스
+      else if (kst.hour >= 17 && kst.dayIdx === 5) {
+        selectedMobileDay = '월';
+        tomorrowDayName = '월';
+        currentWeekOffset = 1;
+        isTomorrowAutoActive = true;
+        autoNoticeMessage = '다음주 월요일 외래 일정 자동 표시 중';
+        autoRevertButtonText = '금요일(오늘) 외래 보기';
+      }
+      // 3) 주말 (토, 일) -> 다음주 월요일 미리보기 자동 포커스
+      else if (kst.dayIdx === 6 || kst.dayIdx === 0) {
+        selectedMobileDay = '월';
+        tomorrowDayName = '월';
+        currentWeekOffset = 1;
+        isTomorrowAutoActive = true;
+        autoNoticeMessage = '다음주 월요일 외래 일정 표시 중';
+        autoRevertButtonText = '이번주 외래 보기';
+      }
+      // 4) 평일 주간 (00:00 ~ 16:59) -> 당일 외래 정상 포커스
+      else {
+        selectedMobileDay = realTodayDayName;
+        currentWeekOffset = 0;
+        isTomorrowAutoActive = false;
+      }
+    }
+
+    function updateTomorrowNoticeUI() {
+      const bar = document.getElementById('tomorrowNoticeBar');
+      const text = document.getElementById('tomorrowNoticeText');
+      const btnText = document.getElementById('revertBtnText');
+      if (!bar) return;
+
+      if (isTomorrowAutoActive && !hasUserOverriddenFocus) {
+        bar.classList.remove('hidden');
+        if (text) text.innerText = autoNoticeMessage;
+        if (btnText) btnText.innerText = autoRevertButtonText;
+      } else {
+        bar.classList.add('hidden');
+      }
+    }
+
+    function updateWeekButtonsUI() {
+      const btnThis = document.getElementById('btnWeekThis');
+      const btnNext = document.getElementById('btnWeekNext');
+      if (!btnThis || !btnNext) return;
+
+      if (currentWeekOffset === 0) {
+        btnThis.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-bold bg-blue-600 text-white shadow-sm transition-all text-xs';
+        btnNext.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all text-xs';
+      } else {
+        btnNext.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-bold bg-indigo-600 text-white shadow-sm transition-all text-xs';
+        btnThis.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all text-xs';
+      }
+    }
+
+    function revertToTodayFocus() {
+      hasUserOverriddenFocus = true;
+      isTomorrowAutoActive = false;
+      currentWeekOffset = 0;
+      selectedMobileDay = realTodayDayName;
+      updateTomorrowNoticeUI();
+      updateWeekButtonsUI();
+      renderCurrentWeek();
     }
 
     function updateWeekLabels() {
@@ -932,17 +1038,9 @@
 
     function switchWeekOffset(offset) {
       currentWeekOffset = offset;
-      const btnThis = document.getElementById('btnWeekThis');
-      const btnNext = document.getElementById('btnWeekNext');
-
-      if (offset === 0) {
-        btnThis.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-bold bg-blue-600 text-white shadow-sm transition-all text-xs';
-        btnNext.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all text-xs';
-      } else {
-        btnNext.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-bold bg-indigo-600 text-white shadow-sm transition-all text-xs';
-        btnThis.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all text-xs';
-      }
-
+      hasUserOverriddenFocus = true;
+      updateTomorrowNoticeUI();
+      updateWeekButtonsUI();
       renderCurrentWeek();
     }
 
@@ -952,6 +1050,8 @@
       const updateEl = document.getElementById('updatedAtText');
       if (updateEl) updateEl.innerText = `데이터 최신화: ${currentScheduleData.updatedAt || '방금 전'}`;
 
+      updateTomorrowNoticeUI();
+      updateWeekButtonsUI();
       renderCurrentWeek();
       renderDailyOptions(currentScheduleData.weekDays, currentScheduleData.nextWeekDays);
       renderDailyView(document.getElementById('dailyDatePicker').value);
@@ -959,6 +1059,8 @@
 
     function renderCurrentWeek() {
       const active = getActiveWeekData();
+      updateTomorrowNoticeUI();
+      updateWeekButtonsUI();
       renderWeeklyHeader(active.weekDays, active.isNextWeek);
       renderWeeklyCells(active.weekly, active.weekDays);
       renderMobileDayView(active);
@@ -1030,12 +1132,15 @@
 
       weekDays.forEach((w) => {
         const isToday = !isNextWeek && ((w.dateStr === todayStr) || (w.dayName === todayDayName));
-        const todayClass = isToday ? 'bg-blue-50/70 border-b-2 border-b-blue-600 text-blue-700' : '';
+        const isTomorrowHighlight = !isNextWeek && isTomorrowAutoActive && !hasUserOverriddenFocus && (w.dayName === tomorrowDayName);
+        const colClass = isToday 
+          ? 'bg-blue-50/70 dark:bg-blue-950/30 border-b-2 border-b-blue-600 text-blue-700 dark:text-blue-300' 
+          : (isTomorrowHighlight ? 'bg-indigo-50/50 dark:bg-indigo-950/20 border-b-2 border-b-indigo-500 text-indigo-700 dark:text-indigo-300' : '');
         html += `
-          <th class="p-3 w-1/5 font-semibold border-l border-slate-200/80 cursor-pointer hover:bg-slate-50 transition-colors ${todayClass}" onclick="selectDailyDate('${w.dateStr}')">
+          <th class="p-3 w-1/5 font-semibold border-l border-slate-200/80 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${colClass}" onclick="selectDailyDate('${w.dateStr}')">
             <div class="flex items-center justify-between">
-              <span class="font-extrabold ${isToday ? 'text-blue-600' : 'text-slate-800'}">${w.label}</span>
-              ${isToday ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-600 text-white font-black shadow-xs no-print animate-pulse">TODAY</span>' : '<span class="text-[10px] text-blue-600 no-print hover:underline font-semibold">상세 →</span>'}
+              <span class="font-extrabold ${isToday ? 'text-blue-600 dark:text-blue-400' : (isTomorrowHighlight ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-800 dark:text-slate-200')}">${w.label}</span>
+              ${isToday ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-600 text-white font-black shadow-xs no-print animate-pulse">TODAY</span>' : (isTomorrowHighlight ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-indigo-600 text-white font-bold no-print shadow-xs">내일 🌙</span>' : '<span class="text-[10px] text-blue-600 dark:text-blue-400 no-print hover:underline font-semibold">상세 →</span>')}
             </div>
           </th>
         `;
@@ -1112,6 +1217,8 @@
     // ==========================================
     function selectMobileDay(dayName, direction = null) {
       selectedMobileDay = dayName;
+      hasUserOverriddenFocus = true; // 사용자가 직접 탭/스와이프 시 자동 포커스 잠금
+      updateTomorrowNoticeUI();
       const card = document.getElementById('mobileCardContainer');
       if (card && direction) {
         card.classList.remove('swipe-anim-left', 'swipe-anim-right');
