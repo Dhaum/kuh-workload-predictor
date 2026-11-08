@@ -481,6 +481,18 @@
           </div>
         </div>
 
+        <!-- 17:00 이후 내일/다음주 외래 자동 표시 안내 바 (데스크톱 & 모바일 공통 안전장치 & 원터치 복귀) -->
+        <div id="tomorrowNoticeBar" class="hidden flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-indigo-50/95 dark:bg-indigo-950/70 border border-indigo-200/80 dark:border-indigo-800/80 text-xs text-indigo-900 dark:text-indigo-200 font-semibold shadow-2xs transition-all">
+          <div class="flex items-center gap-2">
+            <span class="text-sm">🌙</span>
+            <span id="tomorrowNoticeText">내일 외래 일정 자동 표시 중</span>
+          </div>
+          <button onclick="revertToTodayFocus()" class="px-2.5 py-1 rounded-lg bg-white dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200 border border-indigo-300 dark:border-indigo-700 font-bold hover:bg-indigo-50 dark:hover:bg-indigo-800 text-[11px] shadow-2xs transition-all flex items-center gap-1 active:scale-95">
+            <span id="revertBtnText">오늘 외래 보기</span>
+            <span>↩</span>
+          </button>
+        </div>
+
         <!-- 1-A: MOBILE DAY-CARD VIEW (< sm) WITH TOUCH SWIPE -->
         <div id="viewWeeklyMobile" class="block sm:hidden space-y-2.5">
           <!-- Day Selector Bar -->
@@ -490,18 +502,6 @@
             <button onclick="selectMobileDay('수')" id="mTab-수" class="py-1.5 rounded-lg transition-all">수</button>
             <button onclick="selectMobileDay('목')" id="mTab-목" class="py-1.5 rounded-lg transition-all">목</button>
             <button onclick="selectMobileDay('금')" id="mTab-금" class="py-1.5 rounded-lg transition-all">금</button>
-          </div>
-
-          <!-- 17:00 이후 내일 외래 자동 표시 안내 바 (안전장치 & 원터치 복귀) -->
-          <div id="tomorrowNoticeBar" class="hidden flex items-center justify-between px-3 py-2 rounded-xl bg-indigo-50/95 dark:bg-indigo-950/70 border border-indigo-200/80 dark:border-indigo-800/80 text-xs text-indigo-900 dark:text-indigo-200 font-semibold shadow-2xs transition-all">
-            <div class="flex items-center gap-1.5">
-              <span class="text-sm">🌙</span>
-              <span id="tomorrowNoticeText">내일(금) 외래 일정 자동 표시 중</span>
-            </div>
-            <button onclick="revertToTodayFocus()" class="px-2.5 py-1 rounded-lg bg-white dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200 border border-indigo-300 dark:border-indigo-700 font-bold hover:bg-indigo-50 dark:hover:bg-indigo-800 text-[11px] shadow-2xs transition-all flex items-center gap-0.5 active:scale-95">
-              <span id="revertBtnText">오늘 외래 보기</span>
-              <span>↩</span>
-            </button>
           </div>
 
           <!-- Swipable Day Schedule Card -->
@@ -879,20 +879,60 @@
       const btn = document.getElementById('btnRefresh');
       if (btn) btn.innerText = '⟳ 갱신 중...';
 
+      let dataLoaded = false;
+
+      // 1순위: /api/schedule (온라인 실시간 API)
       try {
         const url = forceRefresh ? '/api/schedule?refresh=true' : '/api/schedule';
         const res = await fetch(url);
-        if (!res.ok) throw new Error('API fetch failed');
-        currentScheduleData = await res.json();
+        if (res.ok) {
+          currentScheduleData = await res.json();
+          dataLoaded = true;
+          // PWA CacheStorage에 영속 보관 (조제실 음영 지역 오프라인 대비)
+          if ('caches' in window) {
+            caches.open('kuh-schedule-data-v1').then(cache => {
+              cache.put('/api/schedule', new Response(JSON.stringify(currentScheduleData), {
+                headers: { 'Content-Type': 'application/json; charset=utf-8' }
+              }));
+            }).catch(() => {});
+          }
+        }
       } catch (err) {
+        console.warn('API fetch failed, trying static schedule.json fallback:', err);
+      }
+
+      // 2순위: /data/schedule.json (정적 사전 수합 빌드 데이터)
+      if (!dataLoaded) {
         try {
           const fallbackRes = await fetch('/data/schedule.json');
-          if (!fallbackRes.ok) throw new Error('Local JSON fallback failed');
-          currentScheduleData = await fallbackRes.json();
+          if (fallbackRes.ok) {
+            currentScheduleData = await fallbackRes.json();
+            dataLoaded = true;
+          }
         } catch (e2) {
-          console.warn('Fallback failed, using mock data:', e2);
-          currentScheduleData = getMockFallbackData();
+          console.warn('Local JSON fallback failed, trying cache storage:', e2);
         }
+      }
+
+      // 3순위: CacheStorage 직접 탐색 (네트워크 완전 단절 오프라인)
+      if (!dataLoaded && 'caches' in window) {
+        try {
+          const cache = await caches.open('kuh-schedule-data-v1');
+          const cachedRes = await cache.match('/api/schedule');
+          if (cachedRes) {
+            currentScheduleData = await cachedRes.json();
+            dataLoaded = true;
+            console.log('Loaded schedule data from CacheStorage');
+          }
+        } catch (e3) {
+          console.warn('CacheStorage read failed:', e3);
+        }
+      }
+
+      // 4순위: 비상 목업
+      if (!dataLoaded) {
+        console.warn('All fallbacks failed, using mock data');
+        currentScheduleData = getMockFallbackData();
       }
 
       if (btn) btn.innerText = '⟳ 새로고침';
@@ -917,7 +957,8 @@
 
     function initToday() {
       const kst = getKSTInfo();
-      realTodayDayName = ['월', '화', '수', '목', '금'].includes(kst.dayName) ? kst.dayName : '월';
+      // 평일은 당일 요일, 주말은 가장 최근 외래일인 금요일 기준
+      realTodayDayName = ['월', '화', '수', '목', '금'].includes(kst.dayName) ? kst.dayName : '금';
 
       if (hasUserOverriddenFocus) {
         return; // 세션 내 수동 조작 기억 (무한 핑퐁/하이재킹 방지)
@@ -1133,14 +1174,27 @@
       weekDays.forEach((w) => {
         const isToday = !isNextWeek && ((w.dateStr === todayStr) || (w.dayName === todayDayName));
         const isTomorrowHighlight = !isNextWeek && isTomorrowAutoActive && !hasUserOverriddenFocus && (w.dayName === tomorrowDayName);
+        const isUpcomingClinicHighlight = isNextWeek && isTomorrowAutoActive && !hasUserOverriddenFocus && (w.dayName === '월');
+
+        const isHighlight = isToday || isTomorrowHighlight || isUpcomingClinicHighlight;
         const colClass = isToday 
           ? 'bg-blue-50/70 dark:bg-blue-950/30 border-b-2 border-b-blue-600 text-blue-700 dark:text-blue-300' 
-          : (isTomorrowHighlight ? 'bg-indigo-50/50 dark:bg-indigo-950/20 border-b-2 border-b-indigo-500 text-indigo-700 dark:text-indigo-300' : '');
+          : (isHighlight ? 'bg-indigo-50/50 dark:bg-indigo-950/20 border-b-2 border-b-indigo-500 text-indigo-700 dark:text-indigo-300' : '');
+
+        let badgeHtml = '<span class="text-[10px] text-blue-600 dark:text-blue-400 no-print hover:underline font-semibold">상세 →</span>';
+        if (isToday) {
+          badgeHtml = '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-600 text-white font-black shadow-xs no-print animate-pulse">TODAY</span>';
+        } else if (isTomorrowHighlight) {
+          badgeHtml = '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-indigo-600 text-white font-bold no-print shadow-xs">내일 🌙</span>';
+        } else if (isUpcomingClinicHighlight) {
+          badgeHtml = '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-indigo-600 text-white font-bold no-print shadow-xs">다음 출근일 🌙</span>';
+        }
+
         html += `
           <th class="p-3 w-1/5 font-semibold border-l border-slate-200/80 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${colClass}" onclick="selectDailyDate('${w.dateStr}')">
             <div class="flex items-center justify-between">
-              <span class="font-extrabold ${isToday ? 'text-blue-600 dark:text-blue-400' : (isTomorrowHighlight ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-800 dark:text-slate-200')}">${w.label}</span>
-              ${isToday ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-600 text-white font-black shadow-xs no-print animate-pulse">TODAY</span>' : (isTomorrowHighlight ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-indigo-600 text-white font-bold no-print shadow-xs">내일 🌙</span>' : '<span class="text-[10px] text-blue-600 dark:text-blue-400 no-print hover:underline font-semibold">상세 →</span>')}
+              <span class="font-extrabold ${isToday ? 'text-blue-600 dark:text-blue-400' : (isHighlight ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-800 dark:text-slate-200')}">${w.label}</span>
+              ${badgeHtml}
             </div>
           </th>
         `;
@@ -1240,6 +1294,8 @@
         if (!btn) return;
         const isSelected = (d === selectedMobileDay);
         const isToday = !activeWeek.isNextWeek && (d === todayDayName);
+        const isTomorrow = !activeWeek.isNextWeek && isTomorrowAutoActive && !hasUserOverriddenFocus && (d === tomorrowDayName);
+        const isUpcomingClinic = activeWeek.isNextWeek && isTomorrowAutoActive && !hasUserOverriddenFocus && (d === '월');
 
         // 검색어가 있을 때 해당 요일에 검색된 의사가 출근하는지 확인 (23개과 172인 전수 대상)
         const hasSearchMatch = quickSearchQuery && ['AM', 'PM'].some(slot => 
@@ -1250,11 +1306,27 @@
 
         if (isSelected) {
           const activeBg = activeWeek.isNextWeek ? 'bg-indigo-600' : 'bg-blue-600';
+          let stateTag = '';
+          if (isToday) {
+            stateTag = ' <span class="text-[9px] px-1 bg-white text-blue-600 rounded-sm">오늘</span>';
+          } else if (isTomorrow) {
+            stateTag = ' <span class="text-[9px] px-1 bg-white/30 text-white rounded-sm font-bold">내일 🌙</span>';
+          } else if (isUpcomingClinic) {
+            stateTag = ' <span class="text-[9px] px-1 bg-white/30 text-white rounded-sm font-bold">다음 출근 🌙</span>';
+          }
+
           btn.className = `py-1.5 rounded-lg font-bold ${activeBg} text-white shadow-xs`;
-          btn.innerHTML = `${d}${isToday ? ' <span class="text-[9px] px-1 bg-white text-blue-600 rounded-sm">오늘</span>' : ''}${searchBadge}`;
+          btn.innerHTML = `${d}${stateTag}${searchBadge}`;
         } else {
-          btn.className = `py-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 ${isToday ? 'border border-blue-500/50 text-blue-600 font-bold' : ''} ${hasSearchMatch ? 'bg-blue-50/80 dark:bg-blue-950/40 font-bold text-blue-700 dark:text-blue-300' : ''}`;
-          btn.innerHTML = `${d}${isToday ? ' <span class="text-[9px] text-blue-600">•</span>' : ''}${searchBadge}`;
+          let dotTag = '';
+          if (isToday) {
+            dotTag = ' <span class="text-[9px] text-blue-600 font-bold">•</span>';
+          } else if (isTomorrow || isUpcomingClinic) {
+            dotTag = ' <span class="text-[9px] text-indigo-500 font-bold">🌙</span>';
+          }
+
+          btn.className = `py-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 ${isToday ? 'border border-blue-500/50 text-blue-600 font-bold' : ''} ${(isTomorrow || isUpcomingClinic) ? 'border border-indigo-400/40 text-indigo-600 dark:text-indigo-400 font-semibold' : ''} ${hasSearchMatch ? 'bg-blue-50/80 dark:bg-blue-950/40 font-bold text-blue-700 dark:text-blue-300' : ''}`;
+          btn.innerHTML = `${d}${dotTag}${searchBadge}`;
         }
       });
 
@@ -1687,6 +1759,23 @@
 
     // Initialize
     fetchScheduleData();
+
+    // PWA Service Worker 등록 & 오프라인 동기화
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then((reg) => {
+          console.log('[PWA] Service Worker 등록 완료:', reg.scope);
+        }).catch((err) => {
+          console.warn('[PWA] Service Worker 등록 실패:', err);
+        });
+      });
+    }
+
+    // 온라인 복구 시 자동 최신화
+    window.addEventListener('online', () => {
+      console.log('[PWA] 네트워크 재연결 감지: 최신 외래 일정 동기화');
+      fetchScheduleData(true);
+    });
   </script>
 
   <!-- ABOUT / APP INFO MODAL (블러 배경 클릭 시 자동 닫힘) -->

@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node src/cli.js",
     "dev": "node src/cli.js --serve",
-    "build": "node src/cli.js --fetch"
+    "build": "node src/cli.js --fetch",
+    "test": "node scripts/test_pwa_cache.js && node scripts/test_focus_scenarios.js"
   },
   "keywords": [
     "kuh",

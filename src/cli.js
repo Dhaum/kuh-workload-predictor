@@ -33,10 +33,12 @@ async function runFetch() {
 function runServer(port = 3000) {
   const mimeTypes = {
     '.html': 'text/html; charset=utf-8',
-    '.js': 'application/javascript',
-    '.json': 'application/json',
-    '.css': 'text/css',
-    '.ico': 'image/x-icon'
+    '.js': 'application/javascript; charset=utf-8',
+    '.json': 'application/json; charset=utf-8',
+    '.css': 'text/css; charset=utf-8',
+    '.png': 'image/png',
+    '.ico': 'image/x-icon',
+    '.webmanifest': 'application/manifest+json'
   };
 
   const server = http.createServer((req, res) => {

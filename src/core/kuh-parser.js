@@ -38,8 +38,8 @@ function getWeekDays(referenceDate = new Date(), weekOffset = 0) {
   const kst = new Date(utc + (9 * 3600000));
   const day = kst.getDay(); // 0(일) ~ 6(토)
   
-  // 이번 주 월요일 계산 (일요일이면 다음날 월요일)
-  const diffToMon = day === 0 ? 1 : 1 - day;
+  // 이번 주 월요일 계산 (월요일 기준 주간: 일요일은 해당 주의 마지막 날이므로 -6일 보정)
+  const diffToMon = day === 0 ? -6 : 1 - day;
   const monday = new Date(kst);
   monday.setDate(kst.getDate() + diffToMon + (weekOffset * 7));
 
