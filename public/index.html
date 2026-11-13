@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>&lt;나라약국&gt; 건대외래일정표</title>
   <link rel="icon" type="image/png" href="/icon.png">
   <link rel="apple-touch-icon" href="/icon.png">
@@ -108,39 +108,45 @@
       font-weight: 800;
     }
 
-    /* 과별 고유 색상 칩 규격 (Stageshow 정제 버전) */
+    /* 과별 고유 색상 칩 규격 (Unslop: 조용한 중립 표면 + 좌측 컬러 인디케이터) */
     .chip-item {
-      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
       user-select: none;
+      background-color: #ffffff;
+      color: #1e293b;
+      border: 1px solid #e2e8f0;
+      border-left-width: 3px;
     }
     .chip-item:hover {
-      transform: translateY(-1px);
+      background-color: #f8fafc;
+      border-color: #cbd5e1;
     }
 
-    .chip-neuro   { background-color: #faf5ff; color: #6b21a8; border: 1px solid #e9d5ff; }
-    .chip-endo    { background-color: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
-    .chip-cardio  { background-color: #fff1f2; color: #be123c; border: 1px solid #ffe4e6; }
-    .chip-nephro  { background-color: #f0f9ff; color: #0369a1; border: 1px solid #e0f2fe; }
+    .chip-neuro   { border-left-color: #9333ea; }
+    .chip-endo    { border-left-color: #ea580c; }
+    .chip-cardio  { border-left-color: #e11d48; }
+    .chip-nephro  { border-left-color: #0284c7; }
 
-    .chip-onco    { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
-    .chip-pulmo   { background-color: #f0fdfa; color: #0f766e; border: 1px solid #ccfbf1; }
-    .chip-rheum   { background-color: #fdf2f8; color: #be185d; border: 1px solid #fce7f3; }
-    .chip-ortho   { background-color: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
-    .chip-ns      { background-color: #eef2ff; color: #4338ca; border: 1px solid #e0e7ff; }
-    .chip-gi      { background-color: #fefce8; color: #b45309; border: 1px solid #fef9c3; }
-    .chip-cs      { background-color: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; }
+    .chip-onco    { border-left-color: #2563eb; }
+    .chip-pulmo   { border-left-color: #0d9488; }
+    .chip-rheum   { border-left-color: #db2777; }
+    .chip-ortho   { border-left-color: #16a34a; }
+    .chip-ns      { border-left-color: #4f46e5; }
+    .chip-gi      { border-left-color: #d97706; }
+    .chip-cs      { border-left-color: #dc2626; }
 
     .chip-pain, .chip-uro, .chip-oph, .chip-ent, .chip-derma, 
     .chip-psych, .chip-fm, .chip-gs, .chip-obgy, .chip-pedia, .chip-rm, .chip-inf {
-      background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;
+      border-left-color: #94a3b8;
     }
 
     .chip-closed {
       text-decoration: line-through;
-      opacity: 0.5;
+      opacity: 0.48;
       background-color: #f8fafc !important;
       color: #94a3b8 !important;
       border-color: #e2e8f0 !important;
+      border-left-color: #cbd5e1 !important;
     }
 
     /* ==========================================
@@ -196,27 +202,36 @@
       border-color: #334155 !important;
     }
 
-    /* 다크모드 칩 (Glow Pastel Chips: 눈부심 방지 + 선명한 대비) */
-    html.dark .chip-neuro   { background-color: rgba(168, 85, 247, 0.16) !important; color: #d8b4fe !important; border-color: rgba(168, 85, 247, 0.4) !important; }
-    html.dark .chip-endo    { background-color: rgba(249, 115, 22, 0.16) !important; color: #fdba74 !important; border-color: rgba(249, 115, 22, 0.4) !important; }
-    html.dark .chip-cardio  { background-color: rgba(244, 63, 94, 0.16) !important; color: #fda4af !important; border-color: rgba(244, 63, 94, 0.4) !important; }
-    html.dark .chip-nephro  { background-color: rgba(14, 165, 233, 0.16) !important; color: #7dd3fc !important; border-color: rgba(14, 165, 233, 0.4) !important; }
-    html.dark .chip-onco    { background-color: rgba(59, 130, 246, 0.16) !important; color: #93c5fd !important; border-color: rgba(59, 130, 246, 0.4) !important; }
-    html.dark .chip-pulmo   { background-color: rgba(20, 184, 166, 0.16) !important; color: #5eead4 !important; border-color: rgba(20, 184, 166, 0.4) !important; }
-    html.dark .chip-rheum   { background-color: rgba(236, 72, 153, 0.16) !important; color: #f9a8d4 !important; border-color: rgba(236, 72, 153, 0.4) !important; }
-    html.dark .chip-ortho   { background-color: rgba(34, 197, 94, 0.16) !important; color: #86efac !important; border-color: rgba(34, 197, 94, 0.4) !important; }
-    html.dark .chip-ns      { background-color: rgba(99, 102, 241, 0.16) !important; color: #a5b4fc !important; border-color: rgba(99, 102, 241, 0.4) !important; }
-    html.dark .chip-gi      { background-color: rgba(245, 158, 11, 0.16) !important; color: #fde047 !important; border-color: rgba(245, 158, 11, 0.4) !important; }
-    html.dark .chip-cs      { background-color: rgba(239, 68, 68, 0.16) !important; color: #fca5a5 !important; border-color: rgba(239, 68, 68, 0.4) !important; }
+    /* 다크모드 칩 (Unslop: 중립 다크 표면 + 좌측 컬러 인디케이터) */
+    html.dark .chip-item {
+      background-color: #131d33 !important;
+      color: #e2e8f0 !important;
+      border-color: #24324a !important;
+    }
+    html.dark .chip-item:hover {
+      background-color: #192642 !important;
+    }
+    html.dark .chip-neuro   { border-left-color: #a855f7 !important; }
+    html.dark .chip-endo    { border-left-color: #f97316 !important; }
+    html.dark .chip-cardio  { border-left-color: #f43f5e !important; }
+    html.dark .chip-nephro  { border-left-color: #0ea5e9 !important; }
+    html.dark .chip-onco    { border-left-color: #3b82f6 !important; }
+    html.dark .chip-pulmo   { border-left-color: #14b8a6 !important; }
+    html.dark .chip-rheum   { border-left-color: #ec4899 !important; }
+    html.dark .chip-ortho   { border-left-color: #22c55e !important; }
+    html.dark .chip-ns      { border-left-color: #6366f1 !important; }
+    html.dark .chip-gi      { border-left-color: #f59e0b !important; }
+    html.dark .chip-cs      { border-left-color: #ef4444 !important; }
     html.dark .chip-pain, html.dark .chip-uro, html.dark .chip-oph, html.dark .chip-ent,
     html.dark .chip-derma, html.dark .chip-psych, html.dark .chip-fm, html.dark .chip-gs,
     html.dark .chip-obgy, html.dark .chip-pedia, html.dark .chip-rm, html.dark .chip-inf {
-      background-color: rgba(148, 163, 184, 0.12) !important; color: #cbd5e1 !important; border-color: rgba(148, 163, 184, 0.25) !important;
+      border-left-color: #64748b !important;
     }
     html.dark .chip-closed {
-      background-color: rgba(15, 23, 42, 0.6) !important;
+      background-color: rgba(15, 23, 42, 0.55) !important;
       color: #64748b !important;
       border-color: rgba(51, 65, 85, 0.5) !important;
+      border-left-color: rgba(71, 85, 105, 0.5) !important;
     }
 
     /* 다크모드 주간 테이블 */
@@ -316,9 +331,14 @@
           </div>
 
           <!-- 모바일 최상단 우측 배치 다크모드 버튼 -->
-          <div class="flex sm:hidden items-center no-print">
+          <div class="flex sm:hidden items-center gap-1.5 no-print">
+            <button onclick="openAboutModal()" aria-label="앱 정보 및 가이드" class="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 shadow-xs transition-all active:scale-90 flex items-center justify-center">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path stroke-linecap="round" stroke-linejoin="round" d="M12 16v-4m0-4h.01"></path></svg>
+            </button>
             <button onclick="toggleTheme()" aria-label="테마 전환" class="p-2 text-xs font-semibold rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-xs transition-all active:scale-90 flex items-center justify-center">
-              <span class="themeIcon">🌙</span>
+              <span class="themeIcon flex items-center justify-center">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path></svg>
+              </span>
             </button>
           </div>
         </div>
@@ -326,14 +346,16 @@
         <!-- Action Controls -->
         <div class="flex items-center gap-1.5 sm:gap-2 no-print w-full sm:w-auto justify-end">
           <!-- Desktop Dark Mode Toggle Button (데스크톱 전용) -->
-          <button onclick="toggleTheme()" aria-label="테마 전환" class="hidden sm:inline-flex px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-sm transition-all active:scale-95 items-center gap-1">
-            <span class="themeIcon">🌙</span>
+          <button onclick="toggleTheme()" aria-label="테마 전환" class="hidden sm:inline-flex px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-sm transition-all active:scale-95 items-center gap-1.5">
+            <span class="themeIcon flex items-center justify-center">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path></svg>
+            </span>
             <span class="themeLabel text-[11px] font-bold">다크</span>
           </button>
 
           <!-- A4 Print -->
           <button onclick="window.print()" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-sm transition-all active:scale-95">
-            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
             <span>A4 인쇄</span>
           </button>
 
@@ -342,8 +364,9 @@
             <button id="tabWeekly" onclick="switchView('weekly')" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-md font-bold bg-white text-blue-600 shadow-sm transition-all">
               주간 일정표
             </button>
-            <button id="tabDaily" onclick="switchView('daily')" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-md font-semibold text-slate-600 hover:text-slate-900 transition-all">
-              📅 특정 날짜
+            <button id="tabDaily" onclick="switchView('daily')" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-md font-semibold text-slate-600 hover:text-slate-900 transition-all inline-flex items-center justify-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"></path></svg>
+              <span>특정 날짜</span>
             </button>
           </div>
         </div>
@@ -354,46 +377,43 @@
     <!-- MAIN BODY CONTAINER -->
     <main class="max-w-7xl mx-auto p-2.5 sm:p-5 space-y-3.5">
 
-      <!-- TIERED FILTER BAR (Quiet Restraint & Collapsible) -->
-      <section class="stageshow-card rounded-2xl p-3 sm:p-4 text-xs no-print">
-        <!-- Row 1: 타이틀 + 접기/펼치기 버튼 -->
-        <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
-          <div class="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200 text-xs sm:text-sm">
-            <span class="inline-flex items-center justify-center w-5 h-5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-xs">⚡</span>
-            <span>진료과 필터</span>
+      <!-- TIERED FILTER BAR (Unslop: 인라인 슬림 컨트롤 + 단일 포인트 컬러) -->
+      <section class="stageshow-card rounded-2xl px-3 py-2.5 sm:px-4 sm:py-3 text-xs no-print">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <span class="hidden sm:inline-flex items-center gap-1.5 font-bold text-slate-500 dark:text-slate-400 mr-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+              <span>진료과</span>
+            </span>
+            <button onclick="toggleTierFilter('tier1')" id="btnTier1" class="px-3 py-1 rounded-lg font-bold text-xs transition-all border bg-slate-900 dark:bg-blue-600 text-white border-slate-900 dark:border-blue-600 active:scale-95">
+              Tier 1
+            </button>
+            <button onclick="toggleTierFilter('tier2')" id="btnTier2" class="px-3 py-1 rounded-lg font-bold text-xs transition-all border bg-white dark:bg-[#111a2e] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95">
+              Tier 2
+            </button>
+            <button onclick="toggleTierFilter('tier3')" id="btnTier3" class="px-3 py-1 rounded-lg font-bold text-xs transition-all border bg-white dark:bg-[#111a2e] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95">
+              Tier 3
+            </button>
+            <div class="h-3.5 w-px bg-slate-200 dark:bg-slate-700 mx-0.5 hidden sm:block"></div>
+            <button onclick="selectAllFilters()" id="btnSelectAll" class="px-2.5 py-1 rounded-lg text-xs font-bold text-blue-600 dark:text-blue-400 border border-blue-200/80 dark:border-blue-900/60 bg-blue-50/50 dark:bg-blue-950/30 hover:bg-blue-100/60 active:scale-95 transition-all">
+              전체선택
+            </button>
+            <button onclick="resetFilters()" id="btnReset" class="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95">
+              해제
+            </button>
           </div>
 
-          <!-- 접기 / 펼치기 버튼 -->
-          <button onclick="toggleFilterDetail()" id="btnToggleFilterDetail" class="px-2.5 py-1 text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-all flex items-center gap-1 active:scale-95">
-            <span id="filterDetailToggleText">접기/펼치기</span>
+          <button onclick="toggleFilterDetail()" id="btnToggleFilterDetail" class="px-2.5 py-1 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all flex items-center gap-1 active:scale-95 ml-auto">
+            <span id="filterDetailToggleText">세부 과목</span>
             <span id="filterDetailToggleIcon" class="text-[10px]">▾</span>
           </button>
         </div>
 
-        <!-- Row 2: 티어 및 전체선택/해제 퀵 버튼 (상시 노출) -->
-        <div class="pt-2.5 flex items-center gap-1.5 sm:gap-2 flex-wrap">
-          <button onclick="toggleTierFilter('tier1')" id="btnTier1" class="px-3.5 py-1.5 rounded-lg font-bold text-xs transition-all border shadow-xs bg-purple-600 text-white border-purple-600 ring-2 ring-purple-600/20 active:scale-95">
-            Tier 1
-          </button>
-          <button onclick="toggleTierFilter('tier2')" id="btnTier2" class="px-3.5 py-1.5 rounded-lg font-bold text-xs transition-all border shadow-xs bg-white dark:bg-[#111a2e] text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-900/60 hover:bg-sky-50 dark:hover:bg-sky-950/30 active:scale-95">
-            Tier 2
-          </button>
-          <button onclick="toggleTierFilter('tier3')" id="btnTier3" class="px-3.5 py-1.5 rounded-lg font-bold text-xs transition-all border shadow-xs bg-white dark:bg-[#111a2e] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95">
-            Tier 3
-          </button>
-          <button onclick="selectAllFilters()" id="btnSelectAll" class="px-3 py-1.5 rounded-lg text-xs font-bold text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/60 bg-blue-50/60 dark:bg-blue-950/30 hover:bg-blue-100/60 active:scale-95 transition-all">
-            전체선택
-          </button>
-          <button onclick="resetFilters()" id="btnReset" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95">
-            전체해제
-          </button>
-        </div>
-
-        <!-- Row 3: 세부 개별 진료과 목록 (기본 접힘) -->
+        <!-- Row 2: 세부 개별 진료과 목록 (기본 접힘) -->
         <div id="filterDetailBody" class="hidden pt-3 space-y-2 border-t border-slate-100 dark:border-slate-800 mt-2.5 transition-all">
           <!-- Tier 1 Group -->
           <div class="flex items-center gap-2 flex-wrap">
-            <span class="w-14 sm:w-16 font-extrabold text-purple-700 text-xs sm:text-sm shrink-0">Tier 1</span>
+            <span class="w-14 sm:w-16 font-extrabold text-slate-700 dark:text-slate-300 text-xs sm:text-sm shrink-0">Tier 1</span>
             <div class="flex flex-wrap gap-1">
               <button onclick="toggleDept('neuro')" id="flt-neuro" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-neuro text-xs">✓ 신경과</button>
               <button onclick="toggleDept('endo')" id="flt-endo" class="chip-item px-2 py-0.5 rounded-md font-semibold chip-endo text-xs">✓ 내분비내과</button>
@@ -448,8 +468,9 @@
             <button onclick="switchWeekOffset(0)" id="btnWeekThis" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-bold bg-blue-600 text-white shadow-sm transition-all text-xs">
               이번주 (<span id="labelThisWeek">11/2 - 11/6</span>)
             </button>
-            <button onclick="switchWeekOffset(1)" id="btnWeekNext" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:text-slate-900 transition-all text-xs">
-              🔮 다음주 미리보기 (<span id="labelNextWeek">11/9 - 11/13</span>)
+            <button onclick="switchWeekOffset(1)" id="btnWeekNext" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:text-slate-900 transition-all text-xs inline-flex items-center justify-center gap-1">
+              <span>다음주 (<span id="labelNextWeek">11/9 - 11/13</span>)</span>
+              <svg class="w-3 h-3 opacity-75" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
             </button>
           </div>
 
@@ -482,12 +503,12 @@
         </div>
 
         <!-- 17:00 이후 내일/다음주 외래 자동 표시 안내 바 (데스크톱 & 모바일 공통 안전장치 & 원터치 복귀) -->
-        <div id="tomorrowNoticeBar" class="hidden flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-indigo-50/95 dark:bg-indigo-950/70 border border-indigo-200/80 dark:border-indigo-800/80 text-xs text-indigo-900 dark:text-indigo-200 font-semibold shadow-2xs transition-all">
+        <div id="tomorrowNoticeBar" class="hidden flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-blue-50/95 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-800/80 text-xs text-blue-900 dark:text-blue-200 font-semibold transition-all">
           <div class="flex items-center gap-2">
-            <span class="text-sm">🌙</span>
+            <svg class="w-3.5 h-3.5 shrink-0 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"></path></svg>
             <span id="tomorrowNoticeText">내일 외래 일정 자동 표시 중</span>
           </div>
-          <button onclick="revertToTodayFocus()" class="px-2.5 py-1 rounded-lg bg-white dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200 border border-indigo-300 dark:border-indigo-700 font-bold hover:bg-indigo-50 dark:hover:bg-indigo-800 text-[11px] shadow-2xs transition-all flex items-center gap-1 active:scale-95">
+          <button onclick="revertToTodayFocus()" class="px-2.5 py-1 rounded-lg bg-white dark:bg-blue-900 text-blue-700 dark:text-blue-200 border border-blue-300 dark:border-blue-700 font-bold hover:bg-blue-50 dark:hover:bg-blue-800 text-[11px] transition-all flex items-center gap-1 active:scale-95">
             <span id="revertBtnText">오늘 외래 보기</span>
             <span>↩</span>
           </button>
@@ -512,8 +533,8 @@
                 <span class="font-extrabold text-sm text-slate-900" id="mCardTitle">오늘 외래 일정</span>
               </div>
               <div class="flex items-center gap-2">
-                <button onclick="toggleQuickSearch()" id="btnToggleSearch" class="px-2 py-0.5 rounded-lg border border-slate-200 text-slate-600 hover:text-blue-600 hover:border-blue-400 bg-white transition-all flex items-center gap-1 text-[11px] font-bold shadow-2xs">
-                  <span>🔍</span>
+                <button onclick="toggleQuickSearch()" id="btnToggleSearch" class="px-2 py-0.5 rounded-lg border border-slate-200 text-slate-600 hover:text-blue-600 hover:border-blue-400 bg-white transition-all flex items-center gap-1 text-[11px] font-bold">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path stroke-linecap="round" d="M21 21l-4.35-4.35"></path></svg>
                   <span id="btnToggleSearchText">교수 찾기</span>
                 </button>
                 <button onclick="switchView('daily')" class="text-[11px] text-blue-600 font-bold hover:underline">
@@ -525,7 +546,7 @@
             <!-- Expandable Quick Search Bar (모바일) -->
             <div id="quickSearchBar" class="hidden transition-all pb-1">
               <div class="relative flex items-center">
-                <span class="absolute left-2.5 text-xs text-slate-400">🔍</span>
+                <svg class="w-3.5 h-3.5 absolute left-2.5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path stroke-linecap="round" d="M21 21l-4.35-4.35"></path></svg>
                 <input type="text" id="quickSearchInput" placeholder="찾으실 교수명을 입력하세요 (예: 문연실, 김동욱)..." 
                        oninput="handleQuickSearch(this.value)"
                        class="w-full text-xs pl-8 pr-7 py-2 rounded-xl border border-blue-400/80 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-800 shadow-inner">
@@ -556,10 +577,6 @@
               </div>
               <div id="mPmList" class="p-3 rounded-xl bg-slate-50/80 border border-slate-100 min-h-[50px]"></div>
             </div>
-
-            <div class="text-center text-[10px] text-slate-400 font-medium pt-1">
-              👈 좌우로 스와이프하여 다른 요일 확인 👉
-            </div>
           </div>
         </div>
 
@@ -569,10 +586,10 @@
             <span class="font-bold text-slate-800 text-sm tracking-tight" id="weekRangeTitle">이번주 외래 출근부</span>
             <div class="flex items-center gap-3">
               <div class="relative flex items-center">
-                <span class="absolute left-2.5 text-xs text-slate-400">🔍</span>
+                <svg class="w-3.5 h-3.5 absolute left-2.5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path stroke-linecap="round" d="M21 21l-4.35-4.35"></path></svg>
                 <input type="text" id="desktopQuickSearch" placeholder="교수명 즉시 찾기..." 
                        oninput="handleQuickSearch(this.value)"
-                       class="text-xs pl-7 pr-6 py-1.5 rounded-lg border border-slate-200 bg-white focus:outline-none focus:border-blue-500 w-36 sm:w-48 shadow-2xs">
+                       class="text-xs pl-8 pr-6 py-1.5 rounded-lg border border-slate-200 bg-white focus:outline-none focus:border-blue-500 w-36 sm:w-48">
                 <button onclick="clearQuickSearch()" id="btnClearDesktopSearch" class="absolute right-2 text-xs text-slate-400 hover:text-slate-600 font-bold hidden">✕</button>
               </div>
               <span class="text-[11px] text-slate-400 font-medium hidden md:inline">월 - 금 주간 스케줄</span>
@@ -620,7 +637,9 @@
       <div id="viewDaily" class="hidden stageshow-card rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-slate-100 gap-3">
           <div class="flex items-center gap-2.5">
-            <span class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-blue-50 text-blue-600 font-bold text-xs">📅</span>
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-blue-50 text-blue-600 font-bold text-xs">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"></path></svg>
+            </span>
             <span class="text-xs sm:text-sm font-bold text-slate-800">특정 날짜 전체 출근부</span>
             <select id="dailyDatePicker" onchange="renderDailyView(this.value)" class="text-xs p-1.5 rounded-lg border border-slate-200 bg-white font-bold text-blue-600 shadow-xs focus:ring-2 focus:ring-blue-500/20 outline-none">
             </select>
@@ -671,7 +690,7 @@
   <!-- FOOTER (하단 홈바 안전영역 확보) -->
   <footer style="padding-bottom: max(1.5rem, calc(1.5rem + env(safe-area-inset-bottom)));" class="mt-8 pt-4 pb-6 border-t border-slate-200/80 dark:border-slate-800 text-[11px] sm:text-xs text-slate-500 max-w-7xl mx-auto px-4 w-full flex flex-col sm:flex-row items-center justify-between gap-2.5">
     <div class="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
-      <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+      <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
       <span id="updatedAtText" class="font-medium text-slate-600">데이터 최신화: 로딩 중...</span>
       <span class="text-slate-300">·</span>
       <span>건국대학교병원 외래 기준</span>
@@ -852,9 +871,12 @@
       const metaTheme = document.getElementById('metaThemeColor');
       const metaStatusBar = document.getElementById('metaStatusBar');
 
+      const sunSvg = '<svg class="w-4 h-4 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path stroke-linecap="round" d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>';
+      const moonSvg = '<svg class="w-4 h-4 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path></svg>';
+
       if (theme === 'dark') {
         html.classList.add('dark');
-        icons.forEach(ic => ic.innerText = '☀️');
+        icons.forEach(ic => ic.innerHTML = sunSvg);
         labels.forEach(lb => lb.innerText = '라이트');
         if (metaTheme) metaTheme.setAttribute('content', '#090d16');
         if (metaStatusBar) metaStatusBar.setAttribute('content', 'black-translucent');
@@ -862,7 +884,7 @@
         if (document.body) document.body.style.backgroundColor = '#090d16';
       } else {
         html.classList.remove('dark');
-        icons.forEach(ic => ic.innerText = '🌙');
+        icons.forEach(ic => ic.innerHTML = moonSvg);
         labels.forEach(lb => lb.innerText = '다크');
         if (metaTheme) metaTheme.setAttribute('content', '#ffffff');
         if (metaStatusBar) metaStatusBar.setAttribute('content', 'default');
@@ -1023,9 +1045,9 @@
 
       if (currentWeekOffset === 0) {
         btnThis.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-bold bg-blue-600 text-white shadow-sm transition-all text-xs';
-        btnNext.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all text-xs';
+        btnNext.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all text-xs inline-flex items-center justify-center gap-1';
       } else {
-        btnNext.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-bold bg-indigo-600 text-white shadow-sm transition-all text-xs';
+        btnNext.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-bold bg-blue-600 text-white shadow-sm transition-all text-xs inline-flex items-center justify-center gap-1';
         btnThis.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all text-xs';
       }
     }
@@ -1179,21 +1201,21 @@
         const isHighlight = isToday || isTomorrowHighlight || isUpcomingClinicHighlight;
         const colClass = isToday 
           ? 'bg-blue-50/70 dark:bg-blue-950/30 border-b-2 border-b-blue-600 text-blue-700 dark:text-blue-300' 
-          : (isHighlight ? 'bg-indigo-50/50 dark:bg-indigo-950/20 border-b-2 border-b-indigo-500 text-indigo-700 dark:text-indigo-300' : '');
+          : (isHighlight ? 'bg-blue-50/40 dark:bg-blue-950/20 border-b-2 border-b-blue-500 text-blue-700 dark:text-blue-300' : '');
 
         let badgeHtml = '<span class="text-[10px] text-blue-600 dark:text-blue-400 no-print hover:underline font-semibold">상세 →</span>';
         if (isToday) {
-          badgeHtml = '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-600 text-white font-black shadow-xs no-print animate-pulse">TODAY</span>';
+          badgeHtml = '<span class="text-[9px] px-1.5 py-0.5 rounded-md bg-blue-600 text-white font-black no-print">TODAY</span>';
         } else if (isTomorrowHighlight) {
-          badgeHtml = '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-indigo-600 text-white font-bold no-print shadow-xs">내일 🌙</span>';
+          badgeHtml = '<span class="text-[9px] px-1.5 py-0.5 rounded-md bg-blue-600 text-white font-bold no-print">내일</span>';
         } else if (isUpcomingClinicHighlight) {
-          badgeHtml = '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-indigo-600 text-white font-bold no-print shadow-xs">다음 출근일 🌙</span>';
+          badgeHtml = '<span class="text-[9px] px-1.5 py-0.5 rounded-md bg-blue-600 text-white font-bold no-print">다음 출근일</span>';
         }
 
         html += `
           <th class="p-3 w-1/5 font-semibold border-l border-slate-200/80 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${colClass}" onclick="selectDailyDate('${w.dateStr}')">
             <div class="flex items-center justify-between">
-              <span class="font-extrabold ${isToday ? 'text-blue-600 dark:text-blue-400' : (isHighlight ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-800 dark:text-slate-200')}">${w.label}</span>
+              <span class="font-extrabold ${isToday || isHighlight ? 'text-blue-600 dark:text-blue-400' : 'text-slate-800 dark:text-slate-200'}">${w.label}</span>
               ${badgeHtml}
             </div>
           </th>
@@ -1201,6 +1223,14 @@
       });
       thead.innerHTML = html;
     }
+
+    const deptShortMap = {
+      neuro: '신경', endo: '내분비', cardio: '심장', nephro: '신장',
+      onco: '종양', pulmo: '호흡', rheum: '류마', ortho: '정형',
+      ns: '신외', gi: '소화', cs: '흉부', pain: '통증', uro: '비뇨',
+      oph: '안과', ent: '이비', derma: '피부', psych: '정신', fm: '가정',
+      gs: '외과', obgy: '산부', pedia: '소아', rm: '재활', inf: '감염'
+    };
 
     // DESKTOP: 주간 테이블 셀 렌더링
     function renderWeeklyCells(weekly, weekDays) {
@@ -1242,17 +1272,20 @@
                 // 교수명 빠른 찾기 하이라이트/디밍
                 let searchClass = '';
                 if (quickSearchQuery) {
-                  const isMatch = doc.name.toLowerCase().includes(quickSearchQuery) || doc.deptName.toLowerCase().includes(quickSearchQuery);
+                  const isMatch = doc.name.toLowerCase().includes(quickSearchQuery) || (doc.deptName || '').toLowerCase().includes(quickSearchQuery);
                   if (isMatch) {
-                    searchClass = 'ring-2 ring-blue-600 ring-offset-1 font-extrabold shadow-md scale-105 z-10';
+                    searchClass = 'ring-2 ring-blue-600 bg-blue-50/90 dark:bg-blue-950/60 font-extrabold';
                   } else {
                     searchClass = 'opacity-20 grayscale transition-opacity';
                   }
                 }
 
+                const shortDept = deptShortMap[doc.deptKey] || '';
+                const deptPrefix = shortDept ? `<span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium mr-1">${shortDept}</span>` : '';
+
                 return `
-                  <span class="chip-item item-${doc.deptKey} ${doc.chipClass} ${closedClass} ${searchClass} px-2 py-0.5 rounded-md text-xs font-semibold inline-block shadow-2xs transition-all">
-                    ${doc.name}${closedBadge}
+                  <span title="${doc.deptName || shortDept} · ${doc.name}" class="chip-item item-${doc.deptKey} ${doc.chipClass} ${closedClass} ${searchClass} px-2 py-0.5 rounded-md text-xs font-semibold inline-block transition-colors">
+                    ${deptPrefix}${doc.name}${closedBadge}
                   </span>
                 `;
               }).join('');
@@ -1302,17 +1335,17 @@
           (activeWeek.weekly[slot] && activeWeek.weekly[slot][d] || [])
             .some(doc => doc.name.toLowerCase().includes(quickSearchQuery) || doc.deptName.toLowerCase().includes(quickSearchQuery))
         );
-        const searchBadge = hasSearchMatch ? ' <span class="text-[9px] text-blue-600 font-black animate-pulse">●</span>' : '';
+        const searchBadge = hasSearchMatch ? ' <span class="text-[9px] text-blue-600 font-black">●</span>' : '';
 
         if (isSelected) {
-          const activeBg = activeWeek.isNextWeek ? 'bg-indigo-600' : 'bg-blue-600';
+          const activeBg = 'bg-blue-600';
           let stateTag = '';
           if (isToday) {
             stateTag = ' <span class="text-[9px] px-1 bg-white text-blue-600 rounded-sm">오늘</span>';
           } else if (isTomorrow) {
-            stateTag = ' <span class="text-[9px] px-1 bg-white/30 text-white rounded-sm font-bold">내일 🌙</span>';
+            stateTag = ' <span class="text-[9px] px-1 bg-white/25 text-white rounded-sm font-bold">내일</span>';
           } else if (isUpcomingClinic) {
-            stateTag = ' <span class="text-[9px] px-1 bg-white/30 text-white rounded-sm font-bold">다음 출근 🌙</span>';
+            stateTag = ' <span class="text-[9px] px-1 bg-white/25 text-white rounded-sm font-bold">다음 출근</span>';
           }
 
           btn.className = `py-1.5 rounded-lg font-bold ${activeBg} text-white shadow-xs`;
@@ -1322,10 +1355,10 @@
           if (isToday) {
             dotTag = ' <span class="text-[9px] text-blue-600 font-bold">•</span>';
           } else if (isTomorrow || isUpcomingClinic) {
-            dotTag = ' <span class="text-[9px] text-indigo-500 font-bold">🌙</span>';
+            dotTag = ' <span class="text-[9px] text-blue-500 font-bold">•</span>';
           }
 
-          btn.className = `py-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 ${isToday ? 'border border-blue-500/50 text-blue-600 font-bold' : ''} ${(isTomorrow || isUpcomingClinic) ? 'border border-indigo-400/40 text-indigo-600 dark:text-indigo-400 font-semibold' : ''} ${hasSearchMatch ? 'bg-blue-50/80 dark:bg-blue-950/40 font-bold text-blue-700 dark:text-blue-300' : ''}`;
+          btn.className = `py-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 ${isToday ? 'border border-blue-500/50 text-blue-600 font-bold' : ''} ${(isTomorrow || isUpcomingClinic) ? 'border border-blue-400/40 text-blue-600 dark:text-blue-400 font-semibold' : ''} ${hasSearchMatch ? 'bg-blue-50/80 dark:bg-blue-950/40 font-bold text-blue-700 dark:text-blue-300' : ''}`;
           btn.innerHTML = `${d}${dotTag}${searchBadge}`;
         }
       });
@@ -1379,9 +1412,9 @@
             if (matchingDays.length > 0) {
               el.innerHTML = `
                 <div class="p-3 text-xs text-blue-700 dark:text-blue-300 bg-blue-50/70 dark:bg-blue-950/40 rounded-xl border border-blue-200/60 dark:border-blue-900/40">
-                  <p class="font-bold mb-1.5">💡 '${quickSearchQuery}' 교수는 다른 요일에 외래가 있습니다:</p>
+                  <p class="font-bold mb-1.5">'${quickSearchQuery}' 교수는 다른 요일에 외래가 있습니다:</p>
                   <div class="flex gap-1.5 flex-wrap">
-                    ${matchingDays.map(d => `<button onclick="selectMobileDay('${d}')" class="px-2.5 py-1 rounded-md bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-xs text-xs">${d}요일 외래 보기 →</button>`).join('')}
+                    ${matchingDays.map(d => `<button onclick="selectMobileDay('${d}')" class="px-2.5 py-1 rounded-md bg-blue-600 text-white font-bold hover:bg-blue-700 text-xs">${d}요일 외래 보기 →</button>`).join('')}
                   </div>
                 </div>
               `;
@@ -1401,17 +1434,20 @@
               // 교수명 빠른 찾기 하이라이트/디밍
               let searchClass = '';
               if (quickSearchQuery) {
-                const isMatch = doc.name.toLowerCase().includes(quickSearchQuery) || doc.deptName.toLowerCase().includes(quickSearchQuery);
+                const isMatch = doc.name.toLowerCase().includes(quickSearchQuery) || (doc.deptName || '').toLowerCase().includes(quickSearchQuery);
                 if (isMatch) {
-                  searchClass = 'ring-2 ring-blue-600 ring-offset-1 font-extrabold shadow-md scale-105 z-10';
+                  searchClass = 'ring-2 ring-blue-600 bg-blue-50/90 dark:bg-blue-950/60 font-extrabold';
                 } else {
                   searchClass = 'opacity-20 grayscale transition-opacity';
                 }
               }
 
+              const shortDept = deptShortMap[doc.deptKey] || '';
+              const deptPrefix = shortDept ? `<span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium mr-1">${shortDept}</span>` : '';
+
               return `
-                <span class="chip-item ${doc.chipClass} ${closedClass} ${searchClass} px-2 py-1 rounded-md text-xs font-semibold inline-block shadow-2xs transition-all">
-                  ${doc.name}${closedBadge}
+                <span title="${doc.deptName || shortDept} · ${doc.name}" class="chip-item ${doc.chipClass} ${closedClass} ${searchClass} px-2 py-1 rounded-md text-xs font-semibold inline-block transition-colors">
+                  ${deptPrefix}${doc.name}${closedBadge}
                 </span>
               `;
             }).join(' ');
@@ -1531,7 +1567,7 @@
               </div>
               <div class="flex flex-wrap gap-1.5">
                 ${info.docs.map(doc => `
-                  <span class="chip-item ${doc.chipClass} ${doc.isClosed ? 'chip-closed' : ''} px-2 py-0.5 rounded-md text-xs font-semibold shadow-2xs">
+                  <span class="chip-item ${doc.chipClass} ${doc.isClosed ? 'chip-closed' : ''} px-2 py-0.5 rounded-md text-xs font-semibold">
                     ${doc.name}${doc.isClosed ? ` <span class="text-[9px] text-rose-600">[${doc.closedReason || '휴진'}]</span>` : ''}
                   </span>
                 `).join('')}
@@ -1592,11 +1628,11 @@
       const isHidden = body.classList.contains('hidden');
       if (isHidden) {
         body.classList.remove('hidden');
-        if (txt) txt.innerText = '상세 접기';
+        if (txt) txt.innerText = '접기';
         if (icon) icon.innerText = '▴';
       } else {
         body.classList.add('hidden');
-        if (txt) txt.innerText = '접기/펼치기';
+        if (txt) txt.innerText = '세부 과목';
         if (icon) icon.innerText = '▾';
       }
     }
@@ -1633,21 +1669,9 @@
       const anyActive = depts.some(d => activeDepts[d]);
 
       if (anyActive) {
-        if (color === 'purple') {
-          btn.className = 'px-3 py-1 rounded-lg font-bold text-xs transition-all border shadow-xs bg-purple-600 text-white border-purple-600 ring-2 ring-purple-600/20 active:scale-95';
-        } else if (color === 'sky') {
-          btn.className = 'px-3 py-1 rounded-lg font-bold text-xs transition-all border shadow-xs bg-sky-600 text-white border-sky-600 ring-2 ring-sky-600/20 active:scale-95';
-        } else {
-          btn.className = 'px-3 py-1 rounded-lg font-bold text-xs transition-all border shadow-xs bg-slate-700 text-white border-slate-700 ring-2 ring-slate-700/20 active:scale-95';
-        }
+        btn.className = 'px-3 py-1 rounded-lg font-bold text-xs transition-all border bg-slate-900 dark:bg-blue-600 text-white border-slate-900 dark:border-blue-600 active:scale-95';
       } else {
-        if (color === 'purple') {
-          btn.className = 'px-3 py-1 rounded-lg font-bold text-xs transition-all border bg-white dark:bg-[#111a2e] text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-900/60 hover:bg-purple-50 dark:hover:bg-purple-950/30 active:scale-95';
-        } else if (color === 'sky') {
-          btn.className = 'px-3 py-1 rounded-lg font-bold text-xs transition-all border bg-white dark:bg-[#111a2e] text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-900/60 hover:bg-sky-50 dark:hover:bg-sky-950/30 active:scale-95';
-        } else {
-          btn.className = 'px-3 py-1 rounded-lg font-bold text-xs transition-all border bg-white dark:bg-[#111a2e] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95';
-        }
+        btn.className = 'px-3 py-1 rounded-lg font-bold text-xs transition-all border bg-white dark:bg-[#111a2e] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95';
       }
     }
 
@@ -1807,7 +1831,7 @@
         <!-- 섹션 1: PWA 등록법 -->
         <div class="p-3.5 rounded-xl bg-blue-50/60 border border-blue-200/70 space-y-2">
           <div class="flex items-center gap-1.5 font-bold text-blue-900 text-xs sm:text-sm">
-            <span>📱</span>
+            <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"></rect><path stroke-linecap="round" d="M11 18h2"></path></svg>
             <span>스마트폰 홈 화면 바로가기 (앱처럼 사용하기)</span>
           </div>
           <p class="text-[11px] text-blue-800 font-medium">
@@ -1816,14 +1840,14 @@
           
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-[11px]">
             <div class="p-2.5 rounded-lg bg-white/90 border border-blue-200/60 space-y-1">
-              <span class="font-extrabold text-blue-900 block">🍎 아이폰 (Safari)</span>
+              <span class="font-extrabold text-blue-900 block">아이폰 (Safari)</span>
               <p class="text-slate-600">
                 1. 화면 하단 중앙의 <strong>[공유]</strong> 아이콘(네모+화살표 ↑) 터치<br>
                 2. 메뉴에서 <strong>[홈 화면에 추가]</strong> 선택 후 '추가'
               </p>
             </div>
             <div class="p-2.5 rounded-lg bg-white/90 border border-blue-200/60 space-y-1">
-              <span class="font-extrabold text-blue-900 block">🤖 갤럭시 (Chrome/삼성인터넷)</span>
+              <span class="font-extrabold text-blue-900 block">갤럭시 (Chrome / 삼성인터넷)</span>
               <p class="text-slate-600">
                 1. 우측 상단 <strong>[ ⋮ ]</strong> 또는 하단 <strong>[ ☰ ]</strong> 터치<br>
                 2. <strong>[홈 화면에 추가]</strong> (또는 현재 페이지 추가) 선택
@@ -1835,7 +1859,7 @@
         <!-- 섹션 2: 외래 일정 실무 주의사항 -->
         <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2.5">
           <div class="flex items-center gap-1.5 font-bold text-slate-900 text-xs sm:text-sm">
-            <span>⚠️</span>
+            <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"></path></svg>
             <span>외래 일정 확인 시 실무 주의사항</span>
           </div>
 
@@ -1872,7 +1896,7 @@
         <!-- 섹션 3: 개인 모바일 보안 안심 안내 -->
         <div class="p-3 rounded-xl bg-emerald-50/60 border border-emerald-200/70 space-y-1 text-[11px]">
           <div class="flex items-center gap-1.5 font-bold text-emerald-900">
-            <span>🔒</span>
+            <svg class="w-3.5 h-3.5 text-emerald-700 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path stroke-linecap="round" d="M8 11V7a4 4 0 018 0v4"></path></svg>
             <span>개인 모바일 보안 및 안심 안내</span>
           </div>
           <p class="text-emerald-800">

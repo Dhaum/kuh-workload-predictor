@@ -1,12 +1,12 @@
 /**
  * 건대외래일정 (KUH Workload Predictor) PWA Service Worker
- * - 버전: v1.3.1
+ * - 버전: v1.4.0
  * - 오프라인 100% 가동 (조제실 음영지역 대응)
  * - 정적 셸(App Shell): Stale-While-Revalidate
  * - 일정 데이터(/api/schedule, /data/schedule.json): Network-First + Cache-Fallback
  */
 
-const CACHE_NAME = 'kuh-schedule-pwa-v1.3.1';
+const CACHE_NAME = 'kuh-schedule-pwa-v1.4.0';
 const DATA_CACHE_NAME = 'kuh-schedule-data-v1';
 
 const STATIC_ASSETS = [
