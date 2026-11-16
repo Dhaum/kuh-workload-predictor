@@ -111,4 +111,67 @@ function runFocusTests() {
   if (passed !== testCases.length) process.exit(1);
 }
 
+function runWeekBoundaryTests() {
+  console.log('====================================================');
+  console.log('   getWeekDays 월말/월초 주간 경계 정밀 검증');
+  console.log('====================================================\n');
+
+  const boundaryCases = [
+    {
+      name: '2026-11-16 (평범한 주중)',
+      date: '2026-11-16T09:00:00+09:00',
+      check: (thisWeek, nextWeek) => ({
+        ok:
+          thisWeek[0].dateStr === '20261116' &&
+          nextWeek[0].dateStr === '20261123',
+        detail: `이번주 월=${thisWeek[0].dateStr}, 다음주 월=${nextWeek[0].dateStr}`
+      })
+    },
+    {
+      name: '2026-11-23 (다음주 월말-월초 교차)',
+      date: '2026-11-23T09:00:00+09:00',
+      check: (thisWeek, nextWeek) => ({
+        ok:
+          thisWeek[0].dateStr === '20261123' &&
+          nextWeek[0].dateStr === '20261130' &&
+          nextWeek[4].dateStr === '20261204',
+        detail: `이번주 월=${thisWeek[0].dateStr}, 다음주 월=${nextWeek[0].dateStr}, 다음주 금=${nextWeek[4].dateStr}`
+      })
+    },
+    {
+      name: '2026-12-02 (월초 주중: 월요일 전월 귀속)',
+      date: '2026-12-02T09:00:00+09:00',
+      check: (thisWeek, nextWeek) => {
+        const yyyymm = thisWeek[0].dateStr.slice(0, 6);
+        return {
+          ok:
+            thisWeek[0].dateStr === '20261130' &&
+            yyyymm === '202611' &&
+            thisWeek[4].dateStr === '20261204',
+          detail: `이번주 월=${thisWeek[0].dateStr} (YYYYMM=${yyyymm}), 이번주 금=${thisWeek[4].dateStr}`
+        };
+      }
+    }
+  ];
+
+  let passed = 0;
+  for (const bc of boundaryCases) {
+    const refDate = new Date(bc.date);
+    const thisWeek = getWeekDays(refDate, 0);
+    const nextWeek = getWeekDays(refDate, 1);
+    const res = bc.check(thisWeek, nextWeek);
+
+    if (res.ok) {
+      console.log(`✅ [PASS] ${bc.name} -> ${res.detail}`);
+      passed++;
+    } else {
+      console.error(`❌ [FAIL] ${bc.name} -> ${res.detail}`);
+    }
+  }
+
+  console.log(`\n경계 검증 결과: ${passed}/${boundaryCases.length} 통과 (${passed === boundaryCases.length ? '전원 합격 🎉' : '실패 항목 존재 ⚠️'})\n`);
+  if (passed !== boundaryCases.length) process.exit(1);
+}
+
 runFocusTests();
+runWeekBoundaryTests();

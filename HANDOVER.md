@@ -6,12 +6,13 @@
 
 ## 0. 📌 다음 작업 재개 포인트 (Next Action)
 
-- 🟢 **현재 버전**: `v1.3.1` (17:00 익일 자동 포커스 안정화 및 PWA 오프라인 캐시 구축 완료)
+- 🟢 **현재 버전**: `v1.5.0` (주간 날짜 미갱신 근본 해결: PWA 캐시·SW 타임아웃 격리, KST 자정 동적 CDN, 월말 경계 보완 완료)
 - 🎯 **다음에 이어서 할 작업 (Next Action)**:
-  - Vercel 프로덕션 배포 상태 점검 및 모바일 실기기(iOS Safari, 안드로이드 Chrome) PWA 오프라인 로딩 필드 테스트.
+  - 수정 내역 커밋 및 `main` 푸시 후 Vercel(`icn1` 리전) 배포 확인, 모바일 실기기 PWA 재진입/오프라인 검증.
 - ⚡ **실행 명령어**:
   ```bash
-  npm test         # PWA 캐시(41개) 및 17시 자동 포커스(12개) 전수 검증
+  npm test         # PWA 캐시/무결성(52개) 및 포커스/월경계(15개) 전수 검증
+  npm run build    # 정적 schedule.json 최신화 (11/16~11/27)
   npm run dev      # 로컬 프리뷰 서버 구동 (http://localhost:3000)
   ```
 
@@ -26,20 +27,21 @@
        ▼
 [src/core/kuh-fetcher.js]  ─── 순수 Node.js https (Zero-dependency, WAF 방어 헤더)
        ▼
-[src/core/kuh-parser.js]   ─── KST(UTC+9) 보정, 2주치(이번주+다음주) 매트릭스 생성, 플래그 정밀 분석
+[src/core/kuh-parser.js]   ─── KST(UTC+9) 보정, 2주치(이번주+다음주) 매트릭스 생성, 월경계 보정, 플래그 정밀 분석
        ▼
-[api/schedule.js]          ─── Vercel Serverless (당일 메모리 캐시 + Vercel CDN 1시간 캐시)
+[api/schedule.js]          ─── Vercel Serverless (당일 메모리 캐시 + KST 자정 동적 CDN 캐시)
        ▼
-[public/sw.js]             ─── PWA Service Worker (App Shell 캐싱 + 외래 데이터 오프라인 캐시)
+[public/sw.js]             ─── PWA Service Worker (HTML 1.5s Network-First + 일정 데이터 25~30s 타임아웃/폴백 헤더 분리)
        ▼
-[public/index.html]        ─── 단일 파일 반응형 PWA (Vanilla JS + Tailwind CDN, 무빌드 구동)
+[public/index.html]        ─── 단일 파일 반응형 PWA (Fast-Render + Hot-Swap, Vanilla JS + Tailwind CDN, 무빌드 구동)
 ```
 
 ### 4단계 데이터 폴백(Fallback) 안전망
-1. **1순위 (실시간)**: `/api/schedule` (당일 아침 첫 직원이 접속 시 병원 API 1회 수합 후 CDN 캐싱 서빙)
-2. **2순위 (정적 빌드)**: `/data/schedule.json` (CLI 사전 수합 데이터)
-3. **3순위 (PWA CacheStorage)**: `kuh-schedule-data-v1` (조제실 음영지역 네트워크 단절 시 직전 로컬 캐시 자동 반환)
-4. **4순위 (인라인 목업)**: 완전 최초 무네트워크 비상용 목업 렌더링
+1. **0순위 (Fast-Render)**: `kuh-schedule-data-v2` 캐시로 0초 프리렌더링 (지난주 캐시 시 안내 배너 표시 후 백그라운드 최신화)
+2. **1순위 (실시간)**: `/api/schedule` (당일 아침 첫 직원이 접속 시 병원 API 1회 수합 후 CDN 캐싱 서빙)
+3. **2순위 (정적 빌드)**: `/data/schedule.json` (CLI 사전 수합 데이터)
+4. **3순위 (PWA CacheStorage)**: `kuh-schedule-data-v2` (조제실 음영지역 네트워크 단절 시 직전 로컬 캐시 자동 반환)
+5. **4순위 (인라인 목업)**: 완전 최초 무네트워크 비상용 동적 KST 목업 렌더링
 
 ---
 
@@ -155,7 +157,14 @@ node scripts/check_corrupt.js
 
 사용자(윤재님) 피드백 및 레드팀 감사 결과에 따른 최종 프론트엔드 작업 결정 내역입니다. 불필요한 시각적 노이즈와 플랫폼 부작용은 전면 배제하고, 실무 효용성이 검증된 기능만 적용합니다.
 
-### 1) [완료 - 2026-11-08 안정화] 17:00 익일 외래 자동 포커스 안정화 & PWA Service Worker 구축
+### 1) [완료 - 2026-11-16] 주간 일정 미갱신 근본 해결 및 PWA 캐시/월말 경계 정합성 패치 (v1.5.0)
+* **원인 진단**: Vercel 캐시 MISS 실측 `22.2초` 환경에서 `sw.js`의 `4초` 하드 타임아웃으로 매번 abort → 구버전 캐시/`schedule.json`이 `200 OK`로 반환 → `index.html`이 이를 정상 응답으로 재저장하여 구버전 주간이 고착되는 루프 발생.
+* **개선 내역**:
+  1. **Service Worker (`public/sw.js` v1.5.0)**: `CACHE_NAME`(`v1.5.0`)·`DATA_CACHE_NAME`(`v2`) 동반 승격, HTML(`/`, `/index.html`) 1.5초 Network-First, `/api/schedule` 정규화 캐시 키 + 25~30초 타임아웃, `createFallbackResponse`로 불변 헤더 안전 복제(`X-KUH-Fallback` 주입), 3차 오프라인 `503` 반환.
+  2. **프론트엔드 (`public/index.html`)**: Fast-Render + Hot-Swap, 폴백 헤더/이전 주 데이터 `cache.put` 오염 차단, `isScheduleCurrentWeek()` 및 세션당 1회 자동 `?refresh=true` 재시도, 데스크톱/모바일 `TODAY` 배지 엄격 비교(`w.dateStr === todayStr`) 및 KST 함수 통일, `renderDailyOptions` 선택값 보존, `visibilitychange` 복귀 시 자동 재검증.
+  3. **백엔드 & 인프라 (`kuh-parser.js`, `api/schedule.js`, `vercel.json`, `cli.js`)**: 23개 진료과 조회 병렬화(`limit=4`), 월말/월초 경계 `weekDays[0]` 기준 `YYYYMM01` 조회 및 중복 슬롯 제거, `regions: ["icn1"]`, KST 자정 경계 동적 `Cache-Control`(`stale-while-revalidate=86400` 제거), CLI `?refresh=true`/주간 자동 갱신 지원.
+
+### 2) [완료 - 2026-11-08 안정화] 17:00 익일 외래 자동 포커스 안정화 & PWA Service Worker 구축
 * **실무 가치**: 약국 외래 마감(17:00) 후 다음 날 출근 교수 명단 확인 수요를 100% 자동 충족하고, 조제실 음영지역에서도 100% 오프라인 작동 보장.
 * **구현 및 안정화 내역**:
   1. **주말 날짜 정합성 보정 (Double-shift 버그 원천 해결)**:
@@ -196,3 +205,9 @@ node scripts/check_corrupt.js
 - [x] `index.html` 단일 파일 PWA 구조와 반응형 듀얼 뷰가 유지되었는가?
 - [x] PWA 서비스 워커(`public/sw.js`)와 4단계 오프라인 폴백이 검증되었는가 (`npm test`)?
 - [x] 17:00 이후 익일 자동 포커스 및 주말 일요일 날짜 정합성이 안정화되었는가?
+
+---
+
+## 9. 📥 선택/보류 백로그 (Optional Backlog)
+
+- [ ] **[선택/보류] GitHub Actions 스케줄러 기반 무비용 사전 워밍**: 매주 월요일 및 평일 아침(예: KST 06:30)에 `node src/cli.js --fetch`를 자동 실행하여 `public/data/schedule.json`을 최신화·배포하는 기능 (2026-11-16 사용자 결정에 따라 이번 패치에서는 미구현, 추후 필요 시 추가 가능한 Optional Feature로 보존).

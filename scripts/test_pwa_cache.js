@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
+const vm = require('vm');
 
 const BASE_DIR = path.join(__dirname, '..');
 const PUBLIC_DIR = path.join(BASE_DIR, 'public');
@@ -65,6 +66,25 @@ async function testServiceWorker() {
   assert(content.includes('skipWaiting'), '설치 즉시 활성화(skipWaiting) 지원');
   assert(content.includes('clients.claim'), '새 버전 즉시 클라이언트 제어(clients.claim) 지원');
   assert(content.includes('/api/schedule'), '외래 일정 API 인터셉트 및 오프라인 폴백 탑재');
+  assert(
+    content.includes('createFallbackResponse') && content.includes('new Headers(') && content.includes('X-KUH-Fallback'),
+    '불변 Response.headers 복제(createFallbackResponse + new Headers + X-KUH-Fallback) 적용'
+  );
+  assert(
+    /status:\s*503/.test(content) && content.includes("'X-KUH-Fallback': 'offline'"),
+    '3차 오프라인 무캐시 폴백 HTTP 503 및 X-KUH-Fallback: offline 명시'
+  );
+  assert(
+    content.includes("url.pathname === '/' || url.pathname === '/index.html'") && content.includes('1500'),
+    'App Shell HTML(/, /index.html) 1.5초 타임아웃 Network-First 라우팅 적용'
+  );
+
+  try {
+    new vm.Script(content, { filename: 'sw.js' });
+    assert(true, 'sw.js JavaScript 구문 유효성 검증 통과');
+  } catch (e) {
+    assert(false, `sw.js JavaScript 구문 에러: ${e.message}`);
+  }
 
   // STATIC_ASSETS 파일 실존 대조
   const matchAssets = content.match(/STATIC_ASSETS\s*=\s*\[([\s\S]*?)\]/);
@@ -82,6 +102,34 @@ async function testServiceWorker() {
       assert(fs.existsSync(itemPath), `사전 캐싱 대상 실존 확인: ${item} -> ${relPath}`);
     }
   }
+}
+
+async function testFrontendIntegrity() {
+  console.log('\n[2-1] 프론트엔드(index.html) KST 날짜 엄격 검증 & 스크립트 구문 점검');
+  const indexPath = path.join(PUBLIC_DIR, 'index.html');
+  assert(fs.existsSync(indexPath), 'public/index.html 파일 존재');
+
+  const html = fs.readFileSync(indexPath, 'utf8');
+  assert(!html.includes('w.dayName === todayDayName'), '주간 헤더 요일명 폴백(w.dayName === todayDayName) 제거');
+  assert(html.includes('w.dateStr === todayStr'), '주간 헤더 오늘 날짜(w.dateStr === todayStr) 엄격 일치 적용');
+  assert(html.includes('isScheduleCurrentWeek'), '이번주 데이터 유효성 검증(isScheduleCurrentWeek) 탑재');
+  assert(html.includes('kuh-schedule-data-v2'), '신규 데이터 캐시(kuh-schedule-data-v2) 동기화');
+  assert(!html.includes('kuh-schedule-data-v1'), '구버전 데이터 캐시(kuh-schedule-data-v1) 참조 제거');
+
+  const scriptRegex = /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi;
+  let match;
+  let scriptCount = 0;
+  let syntaxOk = true;
+  while ((match = scriptRegex.exec(html)) !== null) {
+    scriptCount++;
+    try {
+      new vm.Script(match[1], { filename: `index.html#script-${scriptCount}` });
+    } catch (e) {
+      syntaxOk = false;
+      assert(false, `index.html 인라인 <script> #${scriptCount} 문법 오류: ${e.message}`);
+    }
+  }
+  assert(scriptCount > 0 && syntaxOk, `index.html 인라인 <script> ${scriptCount}개 구문 파싱 무결성 통과`);
 }
 
 async function testOfflineFallbackData() {
@@ -184,6 +232,7 @@ async function run() {
 
   await testManifest();
   await testServiceWorker();
+  await testFrontendIntegrity();
   await testOfflineFallbackData();
   await testHttpPreviewServer();
 

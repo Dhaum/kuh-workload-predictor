@@ -6,6 +6,18 @@
 
 ## 📌 1. 주요 마일스톤 및 릴리즈 현황
 
+* **v1.5.0 (2026-11-16)**: 주간 일정 미갱신 근본 해결 및 PWA 캐시·월말 경계 정합성 패치 (`세션: [f493c77f](conversation://f493c77f-8034-4d3b-8f65-e52e4283f83e)`)
+  * **Service Worker & 캐시 격리 (`public/sw.js` v1.5.0)**:
+    - 기존 4초 타임아웃(Vercel 캐시 MISS 실측 22.2초 대비 조기 중단)을 25초(`?refresh=true` 30초)로 상향하고, `/api/schedule` 캐시 키를 정규화하며 `DATA_CACHE_NAME`을 `v2`로 승격.
+    - `createFallbackResponse`로 불변 `Response.headers` 안전 복제(`X-KUH-Fallback` 주입) 및 3차 오프라인 응답 `HTTP 503` 명세.
+    - HTML(`/`, `/index.html`)을 1.5초 Network-First로 전환하여 배포 즉시 새 UI 반영.
+  * **프론트엔드 Fast-Render + Hot-Swap & KST 통일 (`public/index.html`)**:
+    - 0초 캐시 프리렌더링 후 이전 주 데이터 감지 시 안내 배너 표기 및 세션당 1회 `?refresh=true` 백그라운드 핫 스왑, 폴백 데이터 `cache.put` 오염 차단.
+    - 데스크톱/모바일 `TODAY` 배지 비교를 `w.dateStr === todayStr`로 엄격 일치시키고 KST 함수(`getKSTInfo`) 4곳 전수 통일, `visibilitychange` 복귀 시 자동 재검증, `renderDailyOptions` 선택값 보존.
+  * **백엔드 속도 개선·월말 경계·자정 CDN 차단 (`kuh-parser.js`, `api/schedule.js`, `vercel.json`, `cli.js`)**:
+    - 23개과 조회 `mapConcurrent(..., 4)` 병렬화, `weekDays[0]` 기준 `YYYYMM01` 조회로 월말/월초 경계(`11/30~12/4`) 누락 방지, 중복 슬롯 제거.
+    - `vercel.json` `"regions": ["icn1"]` 지정 및 전역 `Cache-Control` 제거, `api/schedule.js` KST 자정 경계 동적 `s-maxage` + 주차 검증 적용.
+    - `public/data/schedule.json` `11/16~11/27` 최신화 및 테스트 67개(`test_pwa_cache` 52 + `test_focus_scenarios` 15) 전원 합격.
 * **v1.3.1 (2026-11-08)**: 17:00 익일 외래 자동 포커스 안정화, PWA Service Worker 및 4단계 오프라인 캐시 완성 (`세션: [b4f92cf2](conversation://b4f92cf2-63d7-484e-8e03-f313b15607e2)`)
   * **주말 날짜 정합성 보정 (일요일 Double-Shift 버그 수정)**:
     - `src/core/kuh-parser.js`의 `getWeekDays` 함수에서 일요일 보정식을 `day === 0 ? -6 : 1 - day`로 일원화.
@@ -80,6 +92,8 @@
 | **14** | `abaff3f` | 04:12 | `fix: 교수 찾기 검색 엔진 필터 독립화 (23개과 전수 검색 지원) 및 R&D 보류 반영` | 비활성 티어 관계없이 전수 검색 지원 및 타 요일 외래 안내 퀵버튼 탑재 |
 | **15** | `9608081` | 04:30 | `feat: 17:00 이후 내일 외래 자동 포커스 엔진 및 4대 안전장치 탑재 (v1.3.0)` | 퇴근 시간(17시) 이후 익일 외래 일정 자동 포커스 및 4대 착오 방지 안전장치 |
 | **16** | `402174f` | 21:20 | `feat: 17:00 익일 외래 자동 포커스 안정화 및 PWA 오프라인 캐시(sw.js) 구축 (v1.3.1)` | 일요일 주간 계산 보정, 데스크톱 안내바 공통 승격, PWA sw.js 캐시 및 53종 테스트 통과 |
+| **17** | `864c190` | 11-13 | `ui: apply unslop visual refinements and bump PWA cache v1.4.0` | UI 시각 정제 및 PWA 캐시 v1.4.0 범프 |
+| **18** | `(pending)` | 11-16 | `fix: 주간 일정 미갱신 근본 해결 및 PWA 캐시/월경계 패치 (v1.5.0)` | SW 25~30s 타임아웃/헤더 격리, Fast-Render+Hot-Swap, KST 자정 CDN, 월경계 보정, 테스트 67종 통과 |
 
 ---
 

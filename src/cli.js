@@ -5,29 +5,61 @@
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
-const { buildFullSchedule, getKSTDateString } = require('./core/kuh-parser');
+const { buildFullSchedule, getKSTDateString, getWeekDays } = require('./core/kuh-parser');
 const { ALL_DEPTS } = require('./core/dept-config');
 
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const DATA_DIR = path.join(PUBLIC_DIR, 'data');
 const SCHEDULE_JSON_PATH = path.join(DATA_DIR, 'schedule.json');
 
+let activeFetchPromise = null;
+
+/**
+ * 디스크의 schedule.json이 존재하고 파싱 가능하며 이번주 월요일 기준 최신 데이터인지 확인
+ * @returns {boolean}
+ */
+function isDiskScheduleCurrent() {
+  if (!fs.existsSync(SCHEDULE_JSON_PATH)) {
+    return false;
+  }
+  try {
+    const raw = fs.readFileSync(SCHEDULE_JSON_PATH, 'utf8');
+    const data = JSON.parse(raw);
+    const currentMondayStr = getWeekDays(new Date(), 0)[0].dateStr;
+    return data?.weekDays?.[0]?.dateStr === currentMondayStr;
+  } catch (err) {
+    return false;
+  }
+}
+
 async function runFetch() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+  if (activeFetchPromise) {
+    return activeFetchPromise;
   }
 
-  console.log('====================================================');
-  console.log('   건국대병원 외래 일정 수합 및 예측 엔진 가동');
-  console.log('====================================================');
+  activeFetchPromise = (async () => {
+    try {
+      if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      }
 
-  const scheduleData = await buildFullSchedule(ALL_DEPTS);
-  fs.writeFileSync(SCHEDULE_JSON_PATH, JSON.stringify(scheduleData, null, 2), 'utf8');
+      console.log('====================================================');
+      console.log('   건국대병원 외래 일정 수합 및 예측 엔진 가동');
+      console.log('====================================================');
 
-  console.log(`\n✅ 데이터 저장 완료: ${SCHEDULE_JSON_PATH}`);
-  console.log(`🕒 최신화 시각: ${scheduleData.updatedAt}`);
-  console.log(`📅 대상 주간: ${scheduleData.weekDays.map(w => w.label).join(' | ')}`);
-  return scheduleData;
+      const scheduleData = await buildFullSchedule(ALL_DEPTS);
+      fs.writeFileSync(SCHEDULE_JSON_PATH, JSON.stringify(scheduleData, null, 2), 'utf8');
+
+      console.log(`\n✅ 데이터 저장 완료: ${SCHEDULE_JSON_PATH}`);
+      console.log(`🕒 최신화 시각: ${scheduleData.updatedAt}`);
+      console.log(`📅 대상 주간: ${scheduleData.weekDays.map(w => w.label).join(' | ')}`);
+      return scheduleData;
+    } finally {
+      activeFetchPromise = null;
+    }
+  })();
+
+  return activeFetchPromise;
 }
 
 function runServer(port = 3000) {
@@ -41,24 +73,58 @@ function runServer(port = 3000) {
     '.webmanifest': 'application/manifest+json'
   };
 
-  const server = http.createServer((req, res) => {
+  const server = http.createServer(async (req, res) => {
+    const [reqPath, queryString = ''] = (req.url || '/').split('?');
+
     // API Route simulation for local
-    if (req.url === '/api/schedule') {
-      if (fs.existsSync(SCHEDULE_JSON_PATH)) {
+    if (reqPath === '/api/schedule') {
+      if (req.method === 'OPTIONS') {
         res.writeHead(200, {
-          'Content-Type': 'application/json; charset=utf-8',
-          'Access-Control-Allow-Origin': '*'
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET,OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type'
         });
-        fs.createReadStream(SCHEDULE_JSON_PATH).pipe(res);
+        res.end();
         return;
-      } else {
-        res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: '데이터가 없습니다. 먼저 fetch를 실행하세요.' }));
+      }
+
+      try {
+        const searchParams = new URLSearchParams(queryString);
+        const forceRefresh = searchParams.get('refresh') === 'true';
+
+        if (forceRefresh || !isDiskScheduleCurrent()) {
+          await runFetch();
+        }
+
+        if (fs.existsSync(SCHEDULE_JSON_PATH)) {
+          res.writeHead(200, {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Access-Control-Allow-Origin': '*',
+            'Cache-Control': 'no-store'
+          });
+          fs.createReadStream(SCHEDULE_JSON_PATH).pipe(res);
+          return;
+        } else {
+          res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ error: '데이터가 없습니다. 먼저 fetch를 실행하세요.' }));
+          return;
+        }
+      } catch (err) {
+        console.error('[Local-API] /api/schedule 처리 실패:', err);
+        res.writeHead(500, {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Access-Control-Allow-Origin': '*',
+          'Cache-Control': 'no-store'
+        });
+        res.end(JSON.stringify({
+          error: '건국대학교병원 외래 일정 수합 중 오류가 발생했습니다.',
+          details: err.message
+        }));
         return;
       }
     }
 
-    let filePath = path.join(PUBLIC_DIR, req.url === '/' ? 'index.html' : req.url);
+    let filePath = path.join(PUBLIC_DIR, reqPath === '/' ? 'index.html' : reqPath);
     const ext = path.extname(filePath);
     const contentType = mimeTypes[ext] || 'application/octet-stream';
 
@@ -87,7 +153,7 @@ function runServer(port = 3000) {
 async function main() {
   const args = process.argv.slice(2);
   if (args.includes('--serve')) {
-    if (!fs.existsSync(SCHEDULE_JSON_PATH)) {
+    if (!fs.existsSync(SCHEDULE_JSON_PATH) || !isDiskScheduleCurrent()) {
       await runFetch();
     }
     runServer(3000);
@@ -105,5 +171,6 @@ if (require.main === module) {
 
 module.exports = {
   runFetch,
-  runServer
+  runServer,
+  isDiskScheduleCurrent
 };

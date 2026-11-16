@@ -466,10 +466,10 @@
           <!-- This Week / Next Week Switcher -->
           <div class="inline-flex bg-slate-200/80 p-0.5 rounded-xl border border-slate-300/60 text-xs w-full sm:w-auto shadow-inner">
             <button onclick="switchWeekOffset(0)" id="btnWeekThis" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-bold bg-blue-600 text-white shadow-sm transition-all text-xs">
-              이번주 (<span id="labelThisWeek">11/2 - 11/6</span>)
+              이번주 (<span id="labelThisWeek">로딩 중...</span>)
             </button>
             <button onclick="switchWeekOffset(1)" id="btnWeekNext" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:text-slate-900 transition-all text-xs inline-flex items-center justify-center gap-1">
-              <span>다음주 (<span id="labelNextWeek">11/9 - 11/13</span>)</span>
+              <span>다음주 (<span id="labelNextWeek">로딩 중...</span>)</span>
               <svg class="w-3 h-3 opacity-75" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
             </button>
           </div>
@@ -490,7 +490,7 @@
 
             <!-- 오늘 건대병원 전체 외래 현황 (병원 전체 고정 팩트) -->
             <div class="flex items-center gap-2 text-xs">
-              <span class="text-slate-500 font-medium">오늘(<span id="todayDayBadge">목</span>) 전체 외래:</span>
+              <span class="text-slate-500 font-medium">오늘(<span id="todayDayBadge">-</span>) 전체 외래:</span>
               <span class="font-bold text-slate-800">
                 오전 <span id="todayAmCount" class="text-amber-600 num-counter">0</span>명 · 
                 오후 <span id="todayPmCount" class="text-blue-600 num-counter">0</span>명
@@ -748,6 +748,8 @@
     loadActiveDepts();
 
     let currentScheduleData = null;
+    let isFetchingSchedule = false;
+    let hasAutoRefreshedStaleWeek = false;
     let selectedMobileDay = '월';
     let currentWeekOffset = 0; // 0: 이번주, 1: 다음주
     let quickSearchQuery = ''; // 교수명 즉시 찾기 검색어
@@ -896,85 +898,182 @@
     // ==========================================
     // DATA FETCHING & INITIALIZATION
     // ==========================================
-    async function fetchScheduleData(forceRefresh = false) {
-      initTheme();
-      const btn = document.getElementById('btnRefresh');
-      if (btn) btn.innerText = '⟳ 갱신 중...';
-
-      let dataLoaded = false;
-
-      // 1순위: /api/schedule (온라인 실시간 API)
-      try {
-        const url = forceRefresh ? '/api/schedule?refresh=true' : '/api/schedule';
-        const res = await fetch(url);
-        if (res.ok) {
-          currentScheduleData = await res.json();
-          dataLoaded = true;
-          // PWA CacheStorage에 영속 보관 (조제실 음영 지역 오프라인 대비)
-          if ('caches' in window) {
-            caches.open('kuh-schedule-data-v1').then(cache => {
-              cache.put('/api/schedule', new Response(JSON.stringify(currentScheduleData), {
-                headers: { 'Content-Type': 'application/json; charset=utf-8' }
-              }));
-            }).catch(() => {});
-          }
-        }
-      } catch (err) {
-        console.warn('API fetch failed, trying static schedule.json fallback:', err);
-      }
-
-      // 2순위: /data/schedule.json (정적 사전 수합 빌드 데이터)
-      if (!dataLoaded) {
-        try {
-          const fallbackRes = await fetch('/data/schedule.json');
-          if (fallbackRes.ok) {
-            currentScheduleData = await fallbackRes.json();
-            dataLoaded = true;
-          }
-        } catch (e2) {
-          console.warn('Local JSON fallback failed, trying cache storage:', e2);
-        }
-      }
-
-      // 3순위: CacheStorage 직접 탐색 (네트워크 완전 단절 오프라인)
-      if (!dataLoaded && 'caches' in window) {
-        try {
-          const cache = await caches.open('kuh-schedule-data-v1');
-          const cachedRes = await cache.match('/api/schedule');
-          if (cachedRes) {
-            currentScheduleData = await cachedRes.json();
-            dataLoaded = true;
-            console.log('Loaded schedule data from CacheStorage');
-          }
-        } catch (e3) {
-          console.warn('CacheStorage read failed:', e3);
-        }
-      }
-
-      // 4순위: 비상 목업
-      if (!dataLoaded) {
-        console.warn('All fallbacks failed, using mock data');
-        currentScheduleData = getMockFallbackData();
-      }
-
-      if (btn) btn.innerText = '⟳ 새로고침';
-      initToday();
-      updateWeekLabels();
-      renderAll();
-      updateFiltersUI();
-    }
-
     function getKSTInfo() {
       const now = new Date();
       const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
       const kst = new Date(utc + (9 * 3600000));
       const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+      const dayIdx = kst.getDay();
+      const diffToMon = dayIdx === 0 ? -6 : 1 - dayIdx;
+
+      const formatYmd = (d) => {
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}${mm}${dd}`;
+      };
+
+      const mondayDate = new Date(kst.getFullYear(), kst.getMonth(), kst.getDate() + diffToMon, 12, 0, 0);
+
+      const getWeekDates = (offset = 0) => {
+        const workDays = ['월', '화', '수', '목', '금'];
+        return workDays.map((dName, i) => {
+          const cur = new Date(mondayDate.getFullYear(), mondayDate.getMonth(), mondayDate.getDate() + (offset * 7) + i, 12, 0, 0);
+          const mm = cur.getMonth() + 1;
+          const dd = cur.getDate();
+          return {
+            dateStr: formatYmd(cur),
+            dayName: dName,
+            label: `${dName} (${mm}/${dd})`
+          };
+        });
+      };
+
       return {
         date: kst,
         hour: kst.getHours(),
-        dayIdx: kst.getDay(),
-        dayName: dayNames[kst.getDay()]
+        dayIdx,
+        dayName: dayNames[dayIdx],
+        todayStr: formatYmd(kst),
+        mondayDate,
+        mondayStr: formatYmd(mondayDate),
+        getWeekDates
       };
+    }
+
+    function isScheduleCurrentWeek(data) {
+      if (!data || !Array.isArray(data.weekDays) || data.weekDays.length === 0) return false;
+      return data.weekDays[0].dateStr === getKSTInfo().mondayStr;
+    }
+
+    async function fetchScheduleData(forceRefresh = false) {
+      if (isFetchingSchedule) return;
+      isFetchingSchedule = true;
+      initTheme();
+      const btn = document.getElementById('btnRefresh');
+      if (btn) btn.innerHTML = '<span>⟳</span><span class="underline">갱신 중...</span>';
+
+      let dataLoaded = false;
+      let fallbackHeader = null;
+      let shouldAutoRefreshStaleWeek = false;
+
+      try {
+        // 0순위: Fast-Render (초기 진입 시 CacheStorage 캐시로 0초 즉시 프리렌더링)
+        if (!currentScheduleData && !forceRefresh && 'caches' in window) {
+          try {
+            const cache = await caches.open('kuh-schedule-data-v2');
+            const cachedRes = await cache.match('/api/schedule');
+            if (cachedRes) {
+              const cachedJson = await cachedRes.json();
+              if (cachedJson && !cachedJson.offline && Array.isArray(cachedJson.weekDays)) {
+                currentScheduleData = cachedJson;
+                initToday();
+                updateWeekLabels();
+                renderAll();
+                updateFiltersUI();
+                if (!isScheduleCurrentWeek(currentScheduleData)) {
+                  const updateEl = document.getElementById('updatedAtText');
+                  if (updateEl) {
+                    updateEl.innerText = '⚠️ 이전 주 캐시 임시 표시 중 · 최신 이번주 일정 수합 중...';
+                  }
+                }
+              }
+            }
+          } catch (fastErr) {
+            console.warn('Fast-render CacheStorage read failed:', fastErr);
+          }
+        }
+
+        // 1순위: /api/schedule (온라인 실시간 API)
+        try {
+          const url = forceRefresh ? '/api/schedule?refresh=true' : '/api/schedule';
+          const res = await fetch(url, forceRefresh ? { cache: 'no-store' } : undefined);
+          fallbackHeader = res.headers.get('X-KUH-Fallback');
+          if (res.ok) {
+            const parsedData = await res.json();
+            if (parsedData && !parsedData.offline && Array.isArray(parsedData.weekDays)) {
+              currentScheduleData = parsedData;
+              dataLoaded = true;
+              // SW 미동작 환경이거나 일반 네트워크 200 이번주 응답일 때만 CacheStorage 저장 (캐시 오염 차단)
+              if (!fallbackHeader && isScheduleCurrentWeek(parsedData) && 'caches' in window) {
+                caches.open('kuh-schedule-data-v2').then(cache => {
+                  cache.put('/api/schedule', new Response(JSON.stringify(parsedData), {
+                    headers: { 'Content-Type': 'application/json; charset=utf-8' }
+                  }));
+                }).catch(() => {});
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('API fetch failed, trying static schedule.json fallback:', err);
+        }
+
+        // 2순위: /data/schedule.json (정적 사전 수합 빌드 데이터)
+        if (!dataLoaded) {
+          try {
+            const fallbackRes = await fetch('/data/schedule.json');
+            const hdr = fallbackRes.headers.get('X-KUH-Fallback');
+            if (hdr) fallbackHeader = hdr;
+            if (fallbackRes.ok) {
+              const parsedFallback = await fallbackRes.json();
+              if (parsedFallback && !parsedFallback.offline && Array.isArray(parsedFallback.weekDays)) {
+                if (!currentScheduleData || isScheduleCurrentWeek(parsedFallback) || !isScheduleCurrentWeek(currentScheduleData)) {
+                  currentScheduleData = parsedFallback;
+                }
+                dataLoaded = true;
+              }
+            }
+          } catch (e2) {
+            console.warn('Local JSON fallback failed, trying cache storage:', e2);
+          }
+        }
+
+        // 3순위: CacheStorage 직접 탐색 (네트워크 완전 단절 오프라인)
+        if (!dataLoaded && 'caches' in window) {
+          try {
+            const cache = await caches.open('kuh-schedule-data-v2');
+            const cachedRes = await cache.match('/api/schedule');
+            if (cachedRes) {
+              const parsedCached = await cachedRes.json();
+              if (parsedCached && !parsedCached.offline && Array.isArray(parsedCached.weekDays)) {
+                currentScheduleData = parsedCached;
+                dataLoaded = true;
+                console.log('Loaded schedule data from CacheStorage');
+              }
+            }
+          } catch (e3) {
+            console.warn('CacheStorage read failed:', e3);
+          }
+        }
+
+        // 4순위: 비상 목업 (폴백 후에도 유효 데이터가 없을 때만 사용)
+        if (!dataLoaded && !currentScheduleData) {
+          console.warn('All fallbacks failed, using mock data');
+          currentScheduleData = getMockFallbackData();
+        }
+
+        initToday();
+        updateWeekLabels();
+        renderAll();
+        updateFiltersUI();
+
+        if (!isScheduleCurrentWeek(currentScheduleData)) {
+          const updateEl = document.getElementById('updatedAtText');
+          if (updateEl) {
+            updateEl.innerText = `데이터 최신화: ${currentScheduleData.updatedAt || '이전 데이터'} (⚠️ 이전 주 데이터 · 최신화 필요)`;
+          }
+          if (!forceRefresh && !hasAutoRefreshedStaleWeek && !fallbackHeader && navigator.onLine) {
+            hasAutoRefreshedStaleWeek = true;
+            shouldAutoRefreshStaleWeek = true;
+          }
+        }
+      } finally {
+        isFetchingSchedule = false;
+        if (btn) btn.innerHTML = '<span>⟳</span><span class="underline">새로고침</span>';
+        if (shouldAutoRefreshStaleWeek) {
+          setTimeout(() => fetchScheduleData(true), 0);
+        }
+      }
     }
 
     function initToday() {
@@ -1139,9 +1238,8 @@
     function updateWorkloadMetrics(activeWeek) {
       if (!activeWeek || !activeWeek.weekly) return;
 
-      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-      const now = new Date();
-      const todayDayName = dayNames[now.getDay()];
+      const kst = getKSTInfo();
+      const todayDayName = kst.dayName;
       const targetDay = ['월', '화', '수', '목', '금'].includes(todayDayName) ? todayDayName : '월';
 
       // 1. [필터 반영] 현재 사용자가 선택한 진료과의 총 활성 의사 수
@@ -1188,13 +1286,11 @@
       if (!thead) return;
       let html = '<th class="p-3 w-20 text-center font-bold text-slate-600">시간</th>';
 
-      const now = new Date();
-      const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
-      const dayNames = ['일','월','화','수','목','금','토'];
-      const todayDayName = dayNames[now.getDay()];
+      const kst = getKSTInfo();
+      const todayStr = kst.todayStr;
 
       weekDays.forEach((w) => {
-        const isToday = !isNextWeek && ((w.dateStr === todayStr) || (w.dayName === todayDayName));
+        const isToday = !isNextWeek && (w.dateStr === todayStr);
         const isTomorrowHighlight = !isNextWeek && isTomorrowAutoActive && !hasUserOverriddenFocus && (w.dayName === tomorrowDayName);
         const isUpcomingClinicHighlight = isNextWeek && isTomorrowAutoActive && !hasUserOverriddenFocus && (w.dayName === '월');
 
@@ -1319,14 +1415,15 @@
       if (!activeWeek || !activeWeek.weekly) return;
 
       const dayNames = ['월', '화', '수', '목', '금'];
-      const now = new Date();
-      const todayDayName = ['일','월','화','수','목','금','토'][now.getDay()];
+      const kst = getKSTInfo();
+      const todayStr = kst.todayStr;
 
       dayNames.forEach(d => {
         const btn = document.getElementById(`mTab-${d}`);
         if (!btn) return;
         const isSelected = (d === selectedMobileDay);
-        const isToday = !activeWeek.isNextWeek && (d === todayDayName);
+        const dayObj = (activeWeek.weekDays || []).find(w => w.dayName === d);
+        const isToday = !activeWeek.isNextWeek && Boolean(dayObj && dayObj.dateStr === todayStr);
         const isTomorrow = !activeWeek.isNextWeek && isTomorrowAutoActive && !hasUserOverriddenFocus && (d === tomorrowDayName);
         const isUpcomingClinic = activeWeek.isNextWeek && isTomorrowAutoActive && !hasUserOverriddenFocus && (d === '월');
 
@@ -1365,10 +1462,10 @@
 
       const titleEl = document.getElementById('mCardTitle');
       if (titleEl) {
-        const curDayObj = activeWeek.weekDays.find(w => w.dayName === selectedMobileDay);
+        const curDayObj = (activeWeek.weekDays || []).find(w => w.dayName === selectedMobileDay);
         const dayLabel = curDayObj ? curDayObj.label : `${selectedMobileDay}요일`;
         const prefix = activeWeek.isNextWeek ? '[다음주] ' : '';
-        const todaySuffix = (!activeWeek.isNextWeek && selectedMobileDay === todayDayName) ? ' (오늘)' : '';
+        const todaySuffix = (!activeWeek.isNextWeek && curDayObj && curDayObj.dateStr === todayStr) ? ' (오늘)' : '';
         titleEl.innerText = `${prefix}${dayLabel} 외래 일정${todaySuffix}`;
       }
 
@@ -1511,10 +1608,10 @@
     // ==========================================
     function renderDailyOptions(weekDays = [], nextWeekDays = []) {
       const sel = document.getElementById('dailyDatePicker');
-      if (!sel || sel.options.length > 0) return;
+      if (!sel) return;
 
-      const now = new Date();
-      const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+      const prevVal = sel.value;
+      const todayStr = getKSTInfo().todayStr;
       
       let html = '';
       if (weekDays.length > 0) {
@@ -1535,6 +1632,14 @@
       }
 
       sel.innerHTML = html;
+
+      if (prevVal && [...sel.options].some(o => o.value === prevVal)) {
+        sel.value = prevVal;
+      } else if ([...sel.options].some(o => o.value === todayStr)) {
+        sel.value = todayStr;
+      } else if (sel.options.length > 0) {
+        sel.selectedIndex = 0;
+      }
     }
 
     function renderDailyView(dateKey) {
@@ -1706,22 +1811,11 @@
     }
 
     function getMockFallbackData() {
+      const kst = getKSTInfo();
       return {
-        updatedAt: '2026-11-05 01:34:50',
-        weekDays: [
-          { dateStr: '20261102', dayName: '월', label: '월 (11/2)' },
-          { dateStr: '20261103', dayName: '화', label: '화 (11/3)' },
-          { dateStr: '20261104', dayName: '수', label: '수 (11/4)' },
-          { dateStr: '20261105', dayName: '목', label: '목 (11/5)' },
-          { dateStr: '20261106', dayName: '금', label: '금 (11/6)' }
-        ],
-        nextWeekDays: [
-          { dateStr: '20261109', dayName: '월', label: '월 (11/9)' },
-          { dateStr: '20261110', dayName: '화', label: '화 (11/10)' },
-          { dateStr: '20261111', dayName: '수', label: '수 (11/11)' },
-          { dateStr: '20261112', dayName: '목', label: '목 (11/12)' },
-          { dateStr: '20261113', dayName: '금', label: '금 (11/13)' }
-        ],
+        updatedAt: '오프라인 비상 예시 데이터',
+        weekDays: kst.getWeekDates(0),
+        nextWeekDays: kst.getWeekDates(1),
         weekly: {
           AM: {
             '월': [{ deptKey: 'neuro', name: '김한영', chipClass: 'chip-neuro' }],
@@ -1799,6 +1893,13 @@
     window.addEventListener('online', () => {
       console.log('[PWA] 네트워크 재연결 감지: 최신 외래 일정 동기화');
       fetchScheduleData(true);
+    });
+
+    // PWA 백그라운드 복귀 시 이전 주 데이터 감지 -> 자동 동기화
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && currentScheduleData && !isScheduleCurrentWeek(currentScheduleData)) {
+        fetchScheduleData(false);
+      }
     });
   </script>
 

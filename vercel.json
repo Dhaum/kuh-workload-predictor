@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "regions": ["icn1"],
   "rewrites": [
     {
       "source": "/api/schedule",
@@ -15,8 +16,7 @@
       "source": "/api/(.*)",
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS" },
-        { "key": "Cache-Control", "value": "s-maxage=3600, stale-while-revalidate=86400" }
+        { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS" }
       ]
     }
   ]

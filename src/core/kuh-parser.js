@@ -64,19 +64,26 @@ function getWeekDays(referenceDate = new Date(), weekOffset = 0) {
  * 23개과(또는 지정된 진료과 목록) 전체 스케줄 수합 및 파싱
  */
 async function buildFullSchedule(deptList = ALL_DEPTS) {
-  const kst = getKSTDateString();
-  const yyyymm01 = `${kst.yyyymm}01`;
-  const weekDays = getWeekDays(new Date(), 0);
-  const nextWeekDays = getWeekDays(new Date(), 1);
+  const now = new Date();
+  const kst = getKSTDateString(now);
+  const weekDays = getWeekDays(now, 0);
+  const nextWeekDays = getWeekDays(now, 1);
+  const baseYearMonth = weekDays[0].dateStr.slice(0, 6); // YYYYMM
+  const baseMonth = baseYearMonth.slice(4, 6); // MM
+  const yyyymm01 = `${baseYearMonth}01`;
   const weekDateSet = new Set(weekDays.map(w => w.dateStr));
   const nextWeekDateSet = new Set(nextWeekDays.map(w => w.dateStr));
 
   console.log(`[KUH-Parser] 데이터 수합 시작: ${deptList.length}개 진료과 (기준: ${kst.formatted})`);
 
-  // 1. 각 진료과별 의사 sid 목록 수합
-  const deptDoctorMap = {};
-  for (const dept of deptList) {
+  // 1. 각 진료과별 의사 sid 목록 수합 (동시 4개 제한)
+  const deptResults = await mapConcurrent(deptList, async (dept) => {
     const sids = await fetchDoctorsInDept(dept.cd);
+    return { dept, sids };
+  }, 4);
+
+  const deptDoctorMap = {};
+  for (const { dept, sids } of deptResults) {
     deptDoctorMap[dept.cd] = {
       dept,
       sids
@@ -95,7 +102,7 @@ async function buildFullSchedule(deptList = ALL_DEPTS) {
 
   // 3. 의사별 스케줄 병렬 수합 (동시 4개)
   const allMonthlySchedules = await mapConcurrent(doctorTasks, async (task) => {
-    const res = await fetchDoctorSchedule(task.sid, yyyymm01, kst.month);
+    const res = await fetchDoctorSchedule(task.sid, yyyymm01, baseMonth);
     return {
       task,
       res
@@ -112,6 +119,7 @@ async function buildFullSchedule(deptList = ALL_DEPTS) {
     PM: { '월': [], '화': [], '수': [], '목': [], '금': [] }
   };
   const daily = {}; // "YYYYMMDD": { AM: [], PM: [] }
+  const seenSlots = new Set();
 
   for (const item of allMonthlySchedules) {
     if (!item.res || !item.res.monthlyList) continue;
@@ -121,6 +129,9 @@ async function buildFullSchedule(deptList = ALL_DEPTS) {
     for (const entry of monthlyList) {
       const date = entry.orddd; // YYYYMMDD
       const timeSlot = entry.apflag_nm === '오전' ? 'AM' : 'PM';
+      const slotKey = `${task.deptCd}_${task.sid}_${date}_${timeSlot}`;
+      if (seenSlots.has(slotKey)) continue;
+      seenSlots.add(slotKey);
       
       // 건국대병원 플래그 실측 분석 반영:
       // '당일마감'(01)은 외래 정상 진료(온라인 예약만 마감).
@@ -171,6 +182,7 @@ async function buildFullSchedule(deptList = ALL_DEPTS) {
   const payload = {
     updatedAt: kst.formatted,
     updatedDateOnly: kst.dateOnly,
+    weekStartDate: weekDays[0].dateStr,
     weekDays,
     nextWeekDays,
     weekly,
