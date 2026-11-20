@@ -48,7 +48,7 @@ async function runFetch() {
       console.log('====================================================');
 
       const scheduleData = await buildFullSchedule(ALL_DEPTS);
-      fs.writeFileSync(SCHEDULE_JSON_PATH, JSON.stringify(scheduleData, null, 2), 'utf8');
+      fs.writeFileSync(SCHEDULE_JSON_PATH, JSON.stringify(scheduleData), 'utf8');
 
       console.log(`\n✅ 데이터 저장 완료: ${SCHEDULE_JSON_PATH}`);
       console.log(`🕒 최신화 시각: ${scheduleData.updatedAt}`);

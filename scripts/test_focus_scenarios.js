@@ -2,7 +2,7 @@
  * 17:00 이후 익일 외래 자동 포커스 및 요일 계산 정밀 검증 스크립트
  */
 
-const { getWeekDays } = require('../src/core/kuh-parser');
+const { getWeekDays, getWeekSaturday, hydrateDailyFromWeekly } = require('../src/core/kuh-parser');
 
 function calculateFocusState(kst) {
   const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
@@ -173,5 +173,65 @@ function runWeekBoundaryTests() {
   if (passed !== boundaryCases.length) process.exit(1);
 }
 
+function runSaturdayTests() {
+  console.log('====================================================');
+  console.log('   getWeekSaturday & 슬림 데이터 복원 정밀 검증');
+  console.log('====================================================\n');
+
+  const satCases = [
+    {
+      name: '2026-11-21 (토요일 당일 접속)',
+      date: '2026-11-21T09:00:00+09:00',
+      expThisSat: '20261121',
+      expNextSat: '20261128'
+    },
+    {
+      name: '2026-11-30 (월말 -> 다음달 토요일 교차)',
+      date: '2026-11-30T10:00:00+09:00',
+      expThisSat: '20261205',
+      expNextSat: '20261212'
+    },
+    {
+      name: '2026-12-28 (연말 -> 신년 토요일 교차)',
+      date: '2026-12-28T10:00:00+09:00',
+      expThisSat: '20270102',
+      expNextSat: '20270109'
+    }
+  ];
+
+  let passed = 0;
+  for (const sc of satCases) {
+    const ref = new Date(sc.date);
+    const thisSat = getWeekSaturday(ref, 0);
+    const nextSat = getWeekSaturday(ref, 1);
+    const hydrated = hydrateDailyFromWeekly({
+      weekDays: getWeekDays(ref, 0),
+      nextWeekDays: getWeekDays(ref, 1),
+      weekSaturday: thisSat,
+      nextWeekSaturday: nextSat,
+      weekly: { AM: { '토': [{ name: '송기호' }] }, PM: { '토': [] } },
+      nextWeekly: { AM: { '토': [{ name: '김동욱' }] }, PM: { '토': [] } }
+    });
+    const ok =
+      thisSat.dateStr === sc.expThisSat &&
+      nextSat.dateStr === sc.expNextSat &&
+      thisSat.dayName === '토' &&
+      Object.keys(hydrated).length === 12 &&
+      hydrated[sc.expThisSat].AM[0].name === '송기호' &&
+      hydrated[sc.expNextSat].AM[0].name === '김동욱';
+
+    if (ok) {
+      console.log(`✅ [PASS] ${sc.name} -> 이번주 토=${thisSat.dateStr}, 다음주 토=${nextSat.dateStr}, 복원 일수=12일`);
+      passed++;
+    } else {
+      console.error(`❌ [FAIL] ${sc.name}`);
+    }
+  }
+
+  console.log(`\n토요일 검증 결과: ${passed}/${satCases.length} 통과 (${passed === satCases.length ? '전원 합격 🎉' : '실패 항목 존재 ⚠️'})\n`);
+  if (passed !== satCases.length) process.exit(1);
+}
+
 runFocusTests();
 runWeekBoundaryTests();
+runSaturdayTests();

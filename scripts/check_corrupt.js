@@ -1,12 +1,14 @@
 const fs = require('fs');
+const { hydrateDailyFromWeekly } = require('../src/core/kuh-parser');
 const path = 'c:/Users/dbswo/Desktop/AI Agents/Antigravity/Apps/kuh-workload-predictor/public/data/schedule.json';
 
 const data = JSON.parse(fs.readFileSync(path, 'utf8'));
+const daily = data.daily || hydrateDailyFromWeekly(data);
 const corrupted = [];
 
-for (const date of Object.keys(data.daily)) {
+for (const date of Object.keys(daily)) {
   for (const slot of ['AM', 'PM']) {
-    for (const d of data.daily[date][slot]) {
+    for (const d of daily[date][slot]) {
       if (d.name.includes('\uFFFD') || d.deptName.includes('\uFFFD') || d.clinicType.includes('\uFFFD')) {
         corrupted.push({ date, slot, dept: d.deptName, name: d.name, type: d.clinicType });
       }

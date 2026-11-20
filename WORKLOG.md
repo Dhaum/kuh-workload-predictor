@@ -6,6 +6,15 @@
 
 ## 📌 1. 주요 마일스톤 및 릴리즈 현황
 
+* **v1.6.0 (2026-11-21)**: 온디맨드 토요일 출근부 팝업, A4 세로 모바일형(월-토) 인쇄 & 페이로드 91.6% 경량화 (`세션: [3adb805b](conversation://3adb805b-9556-4d5e-a5b2-29324ef9b205)`)
+  * **토요일 외래 온디맨드 팝업 & 드롭다운 (`public/index.html`, `kuh-parser.js`)**:
+    - 기존 5일(월-금) 주간 뷰 레이아웃은 보존하고, 주차 스위처 옆 `[토요 (MM/DD)]` 버튼으로 토요일 출근부 모달(`#saturdayModalBackdrop`)을 온디맨드 호출 (이번주/다음주 토 전환, 내 필터/전체 과 전환, 빠른 검색 지원).
+    - `특정 날짜` 드롭다운(`dailyDatePicker`)에 이번주·다음주 토요일 상시 포함.
+  * **A4 세로(`portrait`) 모바일형 주간 인쇄 (`public/index.html`)**:
+    - `@page { size: A4 portrait; margin: 7mm; }` 및 `#printWeeklyPortrait` 도입으로 인쇄 시 월-토 6일 요일 카드를 세로 스택(오전/오후 2단, 토요일 오후 0명 시 오전 전폭)으로 출력하며 다크모드 인쇄 방어 적용.
+  * **페이로드 91.6% 경량화 & 렌더러 통합 (`kuh-parser.js`, `cli.js`, `index.html`, `sw.js` v1.6.0)**:
+    - 불필요한 76일치 `daily` 중복 데이터 제거 + 1줄 minified 저장으로 `schedule.json`을 `2,380.5 KB (85,531줄)` ➔ `201.1 KB (1줄)`로 감량하고 클라이언트 `hydrateScheduleData()`로 12일치 동적 복원.
+    - 데스크톱/모바일/모달/인쇄용 칩 필터·렌더링을 `buildTieredChipsHtml()`로 통합하고 테스트 80개(`test_pwa_cache` 62 + `test_focus_scenarios` 18) 전원 통과.
 * **v1.5.0 (2026-11-16)**: 주간 일정 미갱신 근본 해결 및 PWA 캐시·월말 경계 정합성 패치 (`세션: [f493c77f](conversation://f493c77f-8034-4d3b-8f65-e52e4283f83e)`)
   * **Service Worker & 캐시 격리 (`public/sw.js` v1.5.0)**:
     - 기존 4초 타임아웃(Vercel 캐시 MISS 실측 22.2초 대비 조기 중단)을 25초(`?refresh=true` 30초)로 상향하고, `/api/schedule` 캐시 키를 정규화하며 `DATA_CACHE_NAME`을 `v2`로 승격.

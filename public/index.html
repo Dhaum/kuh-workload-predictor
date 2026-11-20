@@ -292,15 +292,53 @@
       100% { transform: translateX(0); opacity: 1; }
     }
 
-    /* A4 가로 인쇄 */
+    /* A4 세로 인쇄 (모바일 카드형 요일 스택 + 오전/오후 2단) */
     @media print {
-      body { padding: 0 !important; background: white !important; color: black !important; font-size: 8.5pt !important; }
-      .no-print { display: none !important; }
-      #viewWeeklyTable { border: 1px solid #000 !important; box-shadow: none !important; display: block !important; }
-      #viewWeeklyMobile { display: none !important; }
-      table { border-collapse: collapse !important; width: 100% !important; }
-      th, td { border: 1px solid #999 !important; padding: 4px !important; }
-      @page { size: landscape; margin: 8mm; }
+      @page { size: A4 portrait; margin: 7mm; }
+      html, body, html.dark, html.dark body {
+        padding: 0 !important;
+        margin: 0 !important;
+        background: #ffffff !important;
+        color: #0f172a !important;
+        font-size: 8pt !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .no-print, header, footer, #viewWeeklyMobile, #viewWeeklyTable, #tomorrowNoticeBar, #aboutModalBackdrop, #saturdayModalBackdrop {
+        display: none !important;
+      }
+      main { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+      #viewWeekly:not(.hidden) #printWeeklyPortrait {
+        display: block !important;
+      }
+      #printWeeklyPortrait .print-day-card {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        border: 1px solid #cbd5e1 !important;
+        background: #ffffff !important;
+      }
+      #printWeeklyPortrait .print-day-header {
+        background: #f8fafc !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+      }
+      #printWeeklyPortrait .chip-item {
+        font-size: 7.5pt !important;
+        line-height: 1.25 !important;
+        padding: 1px 5px !important;
+        background-color: #f8fafc !important;
+        color: #0f172a !important;
+        border-color: #cbd5e1 !important;
+      }
+      #printWeeklyPortrait .chip-closed {
+        background-color: #f1f5f9 !important;
+        color: #94a3b8 !important;
+      }
+      #viewDaily:not(.hidden) {
+        display: block !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
+        padding: 8px !important;
+      }
     }
   </style>
 </head>
@@ -354,7 +392,7 @@
           </button>
 
           <!-- A4 Print -->
-          <button onclick="window.print()" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-sm transition-all active:scale-95">
+          <button onclick="printSchedule()" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-sm transition-all active:scale-95">
             <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
             <span>A4 인쇄</span>
           </button>
@@ -463,14 +501,22 @@
         <!-- Week Controls & Summary Metrics -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-1 gap-2.5 no-print">
           
-          <!-- This Week / Next Week Switcher -->
-          <div class="inline-flex bg-slate-200/80 p-0.5 rounded-xl border border-slate-300/60 text-xs w-full sm:w-auto shadow-inner">
-            <button onclick="switchWeekOffset(0)" id="btnWeekThis" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-bold bg-blue-600 text-white shadow-sm transition-all text-xs">
-              이번주 (<span id="labelThisWeek">로딩 중...</span>)
-            </button>
-            <button onclick="switchWeekOffset(1)" id="btnWeekNext" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:text-slate-900 transition-all text-xs inline-flex items-center justify-center gap-1">
-              <span>다음주 (<span id="labelNextWeek">로딩 중...</span>)</span>
-              <svg class="w-3 h-3 opacity-75" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+          <!-- This Week / Next Week Switcher + On-Demand Saturday Popup -->
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <div class="inline-flex bg-slate-200/80 p-0.5 rounded-xl border border-slate-300/60 text-xs flex-1 sm:flex-none shadow-inner">
+              <button onclick="switchWeekOffset(0)" id="btnWeekThis" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-bold bg-blue-600 text-white shadow-sm transition-all text-xs">
+                이번주 (<span id="labelThisWeek">로딩 중...</span>)
+              </button>
+              <button onclick="switchWeekOffset(1)" id="btnWeekNext" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:text-slate-900 transition-all text-xs inline-flex items-center justify-center gap-1">
+                <span>다음주 (<span id="labelNextWeek">로딩 중...</span>)</span>
+                <svg class="w-3 h-3 opacity-75" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+              </button>
+            </div>
+
+            <button onclick="openSaturdayModal()" id="btnSaturdayModal" title="토요일 외래 출근부 팝업 보기" class="shrink-0 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#111a2e] hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 text-slate-700 dark:text-slate-200 font-bold text-xs shadow-xs transition-all active:scale-95 inline-flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="1.85" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"></path></svg>
+              <span id="btnSaturdayLabel">토요</span>
+              <span id="btnSaturdayTodayTag" class="hidden text-[9px] px-1 py-0.5 rounded bg-blue-600 text-white font-black leading-none">오늘</span>
             </button>
           </div>
 
@@ -631,6 +677,9 @@
           </div>
         </div>
 
+        <!-- 1-C: A4 PORTRAIT PRINT VIEW (인쇄 전용: 모바일처럼 요일 세로 스택 + 오전/오후 2단) -->
+        <div id="printWeeklyPortrait" class="hidden space-y-2"></div>
+
       </div>
 
       <!-- VIEW 2: DAILY DRILLDOWN VIEW -->
@@ -747,12 +796,19 @@
 
     loadActiveDepts();
 
+    const WORK_DAYS = ['월', '화', '수', '목', '금'];
+
     let currentScheduleData = null;
     let isFetchingSchedule = false;
     let hasAutoRefreshedStaleWeek = false;
     let selectedMobileDay = '월';
     let currentWeekOffset = 0; // 0: 이번주, 1: 다음주
     let quickSearchQuery = ''; // 교수명 즉시 찾기 검색어
+
+    // 토요일 팝업 모달 상태 (온디맨드)
+    let satModalWeekOffset = 0;
+    let satModalShowAll = false;
+    let satModalSearch = '';
 
     // 17:00 이후 내일 외래 자동 포커스 상태 관리
     let hasUserOverriddenFocus = false;
@@ -916,17 +972,23 @@
       const mondayDate = new Date(kst.getFullYear(), kst.getMonth(), kst.getDate() + diffToMon, 12, 0, 0);
 
       const getWeekDates = (offset = 0) => {
-        const workDays = ['월', '화', '수', '목', '금'];
-        return workDays.map((dName, i) => {
+        return WORK_DAYS.map((dName, i) => {
           const cur = new Date(mondayDate.getFullYear(), mondayDate.getMonth(), mondayDate.getDate() + (offset * 7) + i, 12, 0, 0);
-          const mm = cur.getMonth() + 1;
-          const dd = cur.getDate();
           return {
             dateStr: formatYmd(cur),
             dayName: dName,
-            label: `${dName} (${mm}/${dd})`
+            label: `${dName} (${cur.getMonth() + 1}/${cur.getDate()})`
           };
         });
+      };
+
+      const getWeekSaturday = (offset = 0) => {
+        const sat = new Date(mondayDate.getFullYear(), mondayDate.getMonth(), mondayDate.getDate() + (offset * 7) + 5, 12, 0, 0);
+        return {
+          dateStr: formatYmd(sat),
+          dayName: '토',
+          label: `토 (${sat.getMonth() + 1}/${sat.getDate()})`
+        };
       };
 
       return {
@@ -937,8 +999,62 @@
         todayStr: formatYmd(kst),
         mondayDate,
         mondayStr: formatYmd(mondayDate),
-        getWeekDates
+        getWeekDates,
+        getWeekSaturday
       };
+    }
+
+    function hydrateScheduleData(data) {
+      if (!data || typeof data !== 'object') return data;
+      const kst = getKSTInfo();
+      const deriveSat = (days, fallbackOffset) => {
+        if (Array.isArray(days) && days.length >= 5) {
+          const fri = days[4].dateStr;
+          const d = new Date(+fri.slice(0, 4), +fri.slice(4, 6) - 1, +fri.slice(6, 8) + 1, 12, 0, 0);
+          const yyyy = d.getFullYear();
+          const mm = d.getMonth() + 1;
+          const dd = d.getDate();
+          return {
+            dateStr: `${yyyy}${String(mm).padStart(2, '0')}${String(dd).padStart(2, '0')}`,
+            dayName: '토',
+            label: `토 (${mm}/${dd})`
+          };
+        }
+        return kst.getWeekSaturday(fallbackOffset);
+      };
+
+      if (!data.weekSaturday) data.weekSaturday = deriveSat(data.weekDays, 0);
+      if (!data.nextWeekSaturday) data.nextWeekSaturday = deriveSat(data.nextWeekDays, 1);
+
+      // 구버전 캐시 호환: daily에는 토요일이 있는데 weekly['토']가 비어있는 경우 복원
+      const fillSatFromDaily = (matrix, sat) => {
+        if (!matrix || !sat || !data.daily || !data.daily[sat.dateStr]) return;
+        ['AM', 'PM'].forEach(slot => {
+          if (matrix[slot] && !Array.isArray(matrix[slot]['토'])) {
+            matrix[slot]['토'] = data.daily[sat.dateStr][slot] || [];
+          }
+        });
+      };
+      fillSatFromDaily(data.weekly, data.weekSaturday);
+      fillSatFromDaily(data.nextWeekly, data.nextWeekSaturday);
+
+      // 신버전 슬림 JSON 호환: daily가 생략된 경우 weekly/nextWeekly로부터 12일치 동적 복원
+      if (!data.daily || typeof data.daily !== 'object') {
+        const daily = {};
+        const attachWeek = (days, sat, matrix) => {
+          if (!matrix) return;
+          [...(days || []), ...(sat ? [sat] : [])].forEach(w => {
+            daily[w.dateStr] = {
+              AM: (matrix.AM && matrix.AM[w.dayName]) || [],
+              PM: (matrix.PM && matrix.PM[w.dayName]) || []
+            };
+          });
+        };
+        attachWeek(data.weekDays, data.weekSaturday, data.weekly);
+        attachWeek(data.nextWeekDays, data.nextWeekSaturday, data.nextWeekly);
+        data.daily = daily;
+      }
+      return data;
     }
 
     function isScheduleCurrentWeek(data) {
@@ -966,7 +1082,7 @@
             if (cachedRes) {
               const cachedJson = await cachedRes.json();
               if (cachedJson && !cachedJson.offline && Array.isArray(cachedJson.weekDays)) {
-                currentScheduleData = cachedJson;
+                currentScheduleData = hydrateScheduleData(cachedJson);
                 initToday();
                 updateWeekLabels();
                 renderAll();
@@ -992,7 +1108,7 @@
           if (res.ok) {
             const parsedData = await res.json();
             if (parsedData && !parsedData.offline && Array.isArray(parsedData.weekDays)) {
-              currentScheduleData = parsedData;
+              currentScheduleData = hydrateScheduleData(parsedData);
               dataLoaded = true;
               // SW 미동작 환경이거나 일반 네트워크 200 이번주 응답일 때만 CacheStorage 저장 (캐시 오염 차단)
               if (!fallbackHeader && isScheduleCurrentWeek(parsedData) && 'caches' in window) {
@@ -1018,7 +1134,7 @@
               const parsedFallback = await fallbackRes.json();
               if (parsedFallback && !parsedFallback.offline && Array.isArray(parsedFallback.weekDays)) {
                 if (!currentScheduleData || isScheduleCurrentWeek(parsedFallback) || !isScheduleCurrentWeek(currentScheduleData)) {
-                  currentScheduleData = parsedFallback;
+                  currentScheduleData = hydrateScheduleData(parsedFallback);
                 }
                 dataLoaded = true;
               }
@@ -1036,7 +1152,7 @@
             if (cachedRes) {
               const parsedCached = await cachedRes.json();
               if (parsedCached && !parsedCached.offline && Array.isArray(parsedCached.weekDays)) {
-                currentScheduleData = parsedCached;
+                currentScheduleData = hydrateScheduleData(parsedCached);
                 dataLoaded = true;
                 console.log('Loaded schedule data from CacheStorage');
               }
@@ -1049,7 +1165,7 @@
         // 4순위: 비상 목업 (폴백 후에도 유효 데이터가 없을 때만 사용)
         if (!dataLoaded && !currentScheduleData) {
           console.warn('All fallbacks failed, using mock data');
-          currentScheduleData = getMockFallbackData();
+          currentScheduleData = hydrateScheduleData(getMockFallbackData());
         }
 
         initToday();
@@ -1079,7 +1195,7 @@
     function initToday() {
       const kst = getKSTInfo();
       // 평일은 당일 요일, 주말은 가장 최근 외래일인 금요일 기준
-      realTodayDayName = ['월', '화', '수', '목', '금'].includes(kst.dayName) ? kst.dayName : '금';
+      realTodayDayName = WORK_DAYS.includes(kst.dayName) ? kst.dayName : '금';
 
       if (hasUserOverriddenFocus) {
         return; // 세션 내 수동 조작 기억 (무한 핑퐁/하이재킹 방지)
@@ -1178,6 +1294,33 @@
         const el = document.getElementById('labelNextWeek');
         if (el) el.innerText = `${nStart} - ${nEnd}`;
       }
+      updateSaturdayButtonUI();
+    }
+
+    function updateSaturdayButtonUI() {
+      const btn = document.getElementById('btnSaturdayModal');
+      const labelEl = document.getElementById('btnSaturdayLabel');
+      const todayTag = document.getElementById('btnSaturdayTodayTag');
+      if (!btn || !labelEl || !currentScheduleData) return;
+
+      const kst = getKSTInfo();
+      const sat = currentWeekOffset === 1 ? currentScheduleData.nextWeekSaturday : currentScheduleData.weekSaturday;
+      const isSatToday = Boolean(sat && sat.dateStr === kst.todayStr);
+
+      if (sat && sat.label) {
+        labelEl.innerText = sat.label.replace('토 ', '토요 ');
+      } else {
+        labelEl.innerText = '토요';
+      }
+
+      if (todayTag) {
+        todayTag.classList.toggle('hidden', !isSatToday);
+      }
+      if (isSatToday) {
+        btn.classList.add('border-blue-500', 'text-blue-700', 'dark:text-blue-300', 'ring-1', 'ring-blue-500/30');
+      } else {
+        btn.classList.remove('border-blue-500', 'text-blue-700', 'dark:text-blue-300', 'ring-1', 'ring-blue-500/30');
+      }
     }
 
     function getActiveWeekData() {
@@ -1215,7 +1358,12 @@
       updateTomorrowNoticeUI();
       updateWeekButtonsUI();
       renderCurrentWeek();
-      renderDailyOptions(currentScheduleData.weekDays, currentScheduleData.nextWeekDays);
+      renderDailyOptions(
+        currentScheduleData.weekDays,
+        currentScheduleData.nextWeekDays,
+        currentScheduleData.weekSaturday,
+        currentScheduleData.nextWeekSaturday
+      );
       renderDailyView(document.getElementById('dailyDatePicker').value);
     }
 
@@ -1223,9 +1371,11 @@
       const active = getActiveWeekData();
       updateTomorrowNoticeUI();
       updateWeekButtonsUI();
+      updateSaturdayButtonUI();
       renderWeeklyHeader(active.weekDays, active.isNextWeek);
       renderWeeklyCells(active.weekly, active.weekDays);
       renderMobileDayView(active);
+      renderPrintPortraitView(active);
       updateWorkloadMetrics(active);
 
       const titleEl = document.getElementById('weekRangeTitle');
@@ -1234,18 +1384,115 @@
       }
     }
 
+    // A4 세로 인쇄 전용 렌더러 (모바일 카드형 요일 세로 스택 월~토 + 오전/오후)
+    function renderPrintPortraitView(activeWeek = getActiveWeekData()) {
+      const container = document.getElementById('printWeeklyPortrait');
+      if (!container || !activeWeek || !activeWeek.weekly) return;
+
+      const weekDays = activeWeek.weekDays || [];
+      const satObj = activeWeek.isNextWeek ? currentScheduleData?.nextWeekSaturday : currentScheduleData?.weekSaturday;
+      const printDays = [
+        ...WORK_DAYS.map((dName, idx) => weekDays[idx] || { dayName: dName, label: `${dName}요일` }),
+        satObj || { dayName: '토', label: '토요일' }
+      ];
+
+      const weekTitle = activeWeek.isNextWeek ? '다음주 외래 출근부 (미리보기)' : '이번주 외래 출근부';
+      const startLabel = printDays[0]?.label?.replace(/^[월화수목금토]\s*\(/, '').replace(')', '') || '';
+      const endLabel = printDays[printDays.length - 1]?.label?.replace(/^[월화수목금토]\s*\(/, '').replace(')', '') || '';
+      const rangeStr = startLabel && endLabel ? `${startLabel} - ${endLabel}` : '';
+      const updatedText = currentScheduleData?.updatedAt || '';
+
+      const cardsHtml = printDays.map((dayObj) => {
+        const dName = dayObj.dayName;
+        const dayLabel = dayObj.label || `${dName}요일`;
+        const amDocs = (activeWeek.weekly.AM && activeWeek.weekly.AM[dName]) || [];
+        const pmDocs = (activeWeek.weekly.PM && activeWeek.weekly.PM[dName]) || [];
+
+        const amRes = buildTieredChipsHtml(amDocs, {
+          searchQuery: quickSearchQuery,
+          chipPaddingClass: 'px-1.5 py-0.5',
+          gapClass: 'gap-1'
+        });
+        const pmRes = buildTieredChipsHtml(pmDocs, {
+          searchQuery: quickSearchQuery,
+          chipPaddingClass: 'px-1.5 py-0.5',
+          gapClass: 'gap-1'
+        });
+
+        const isSatNoPm = dName === '토' && pmDocs.length === 0;
+        const countSummary = isSatNoPm
+          ? `오전 ${amRes.count}명 · 오후 외래 없음`
+          : `오전 ${amRes.count}명 · 오후 ${pmRes.count}명`;
+
+        const bodyHtml = isSatNoPm
+          ? `
+            <div class="p-1.5 space-y-1">
+              <div class="flex items-center gap-1 text-[8pt] font-bold text-amber-700">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block"></span>
+                <span>오전 (09:00 - 12:30)</span>
+              </div>
+              <div>${amRes.html || '<span class="text-[8pt] text-slate-400">해당 조건 출근 없음</span>'}</div>
+            </div>
+          `
+          : `
+            <div class="grid grid-cols-2 divide-x divide-slate-200">
+              <div class="p-1.5 space-y-1">
+                <div class="flex items-center gap-1 text-[8pt] font-bold text-amber-700">
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block"></span>
+                  <span>오전 (09:00 - 12:30)</span>
+                </div>
+                <div>${amRes.html || '<span class="text-[8pt] text-slate-400">해당 조건 출근 없음</span>'}</div>
+              </div>
+              <div class="p-1.5 space-y-1">
+                <div class="flex items-center gap-1 text-[8pt] font-bold text-blue-700">
+                  <span class="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block"></span>
+                  <span>오후 (13:30 - 17:00)</span>
+                </div>
+                <div>${pmRes.html || '<span class="text-[8pt] text-slate-400">해당 조건 출근 없음</span>'}</div>
+              </div>
+            </div>
+          `;
+
+        return `
+          <div class="print-day-card rounded-lg overflow-hidden">
+            <div class="print-day-header px-2.5 py-1 flex items-center justify-between">
+              <span class="font-extrabold text-[9.5pt] text-slate-900">${dayLabel}</span>
+              <span class="text-[7.5pt] font-semibold text-slate-600">${countSummary}</span>
+            </div>
+            ${bodyHtml}
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = `
+        <div class="flex items-baseline justify-between border-b-2 border-slate-800 pb-1 mb-1.5">
+          <div class="flex items-baseline gap-2">
+            <h2 class="text-[11.5pt] font-black text-slate-900">&lt;나라약국&gt; 건대외래일정표</h2>
+            <span class="text-[9pt] font-bold text-blue-700">${weekTitle}${rangeStr ? ` (${rangeStr}, 토 포함)` : ''}</span>
+          </div>
+          <span class="text-[7.5pt] text-slate-500 font-medium">${updatedText ? `최신화: ${updatedText}` : ''}</span>
+        </div>
+        <div class="space-y-1.5">${cardsHtml}</div>
+      `;
+    }
+
+    function printSchedule() {
+      renderPrintPortraitView();
+      window.print();
+    }
+
     // 외래 실시간 현황 (병원 전체 고정 팩트 + 필터 선택 집계 분리)
     function updateWorkloadMetrics(activeWeek) {
       if (!activeWeek || !activeWeek.weekly) return;
 
       const kst = getKSTInfo();
       const todayDayName = kst.dayName;
-      const targetDay = ['월', '화', '수', '목', '금'].includes(todayDayName) ? todayDayName : '월';
+      const targetDay = WORK_DAYS.includes(todayDayName) ? todayDayName : '월';
 
       // 1. [필터 반영] 현재 사용자가 선택한 진료과의 총 활성 의사 수
       let totalFilteredDocs = 0;
       ['AM', 'PM'].forEach(slot => {
-        ['월', '화', '수', '목', '금'].forEach(d => {
+        WORK_DAYS.forEach(d => {
           const list = (activeWeek.weekly[slot] && activeWeek.weekly[slot][d]) || [];
           totalFilteredDocs += list.filter(doc => activeDepts[doc.deptKey] && !doc.isClosed).length;
         });
@@ -1328,69 +1575,70 @@
       gs: '외과', obgy: '산부', pedia: '소아', rm: '재활', inf: '감염'
     };
 
+    // 공통 티어별 의사 칩 HTML 빌더 (데스크톱/모바일/모달 공용)
+    function buildTieredChipsHtml(docs, { searchQuery = '', forceAll = false, chipPaddingClass = 'px-2 py-0.5', gapClass = 'gap-1', includeItemClass = false } = {}) {
+      const q = (searchQuery || '').trim().toLowerCase();
+      const isDocEligible = (d, tierKey) => {
+        if (!tierMapping[tierKey].includes(d.deptKey)) return false;
+        if (forceAll) return true;
+        if (q) {
+          const isMatch = d.name.toLowerCase().includes(q) || (d.deptName || '').toLowerCase().includes(q);
+          if (isMatch) return true;
+          return Boolean(activeDepts[d.deptKey]);
+        }
+        return Boolean(activeDepts[d.deptKey]);
+      };
+
+      const validTierGroups = ['tier1', 'tier2', 'tier3']
+        .map((tierKey, i) => ({ tier: i + 1, docs: docs.filter(d => isDocEligible(d, tierKey)) }))
+        .filter(g => g.docs.length > 0);
+
+      const count = validTierGroups.reduce((acc, g) => acc + g.docs.length, 0);
+      if (count === 0) return { html: '', count: 0 };
+
+      const html = validTierGroups.map((group, groupIdx) => {
+        const dividerClass = groupIdx === 0 ? '' : 'pt-2 mt-2 border-t border-dashed border-slate-200 dark:border-slate-700/70';
+        const chipsHtml = group.docs.map(doc => {
+          const closedClass = doc.isClosed ? 'chip-closed' : '';
+          const closedBadge = doc.isClosed ? ` <span class="text-[9px] text-rose-600 font-bold">[${doc.closedReason || '휴진'}]</span>` : '';
+          let searchClass = '';
+          if (q) {
+            const isMatch = doc.name.toLowerCase().includes(q) || (doc.deptName || '').toLowerCase().includes(q);
+            searchClass = isMatch
+              ? 'ring-2 ring-blue-600 bg-blue-50/90 dark:bg-blue-950/60 font-extrabold'
+              : 'opacity-20 grayscale transition-opacity';
+          }
+          const shortDept = deptShortMap[doc.deptKey] || '';
+          const deptPrefix = shortDept ? `<span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium mr-1">${shortDept}</span>` : '';
+          const itemClass = includeItemClass ? `item-${doc.deptKey}` : '';
+
+          return `
+            <span title="${doc.deptName || shortDept} · ${doc.name}" class="chip-item ${itemClass} ${doc.chipClass} ${closedClass} ${searchClass} ${chipPaddingClass} rounded-md text-xs font-semibold inline-block transition-colors">
+              ${deptPrefix}${doc.name}${closedBadge}
+            </span>
+          `;
+        }).join('');
+
+        return `<div class="${dividerClass} flex flex-wrap ${gapClass}">${chipsHtml}</div>`;
+      }).join('');
+
+      return { html, count };
+    }
+
     // DESKTOP: 주간 테이블 셀 렌더링
     function renderWeeklyCells(weekly, weekDays) {
-      const dayNames = ['월', '화', '수', '목', '금'];
       ['AM', 'PM'].forEach(slot => {
-        dayNames.forEach((dName, idx) => {
+        WORK_DAYS.forEach((dName, idx) => {
           const cell = document.getElementById(`cell-${slot}-${idx}`);
           if (!cell) return;
           const docs = (weekly[slot] && weekly[slot][dName]) || [];
-          
-          const isDocEligible = (d, tierKey) => {
-            if (!tierMapping[tierKey].includes(d.deptKey)) return false;
-            if (quickSearchQuery) {
-              const isMatch = d.name.toLowerCase().includes(quickSearchQuery) || d.deptName.toLowerCase().includes(quickSearchQuery);
-              if (isMatch) return true; // 검색어와 일치하면 비활성 티어라도 무조건 노출
-              return Boolean(activeDepts[d.deptKey]);
-            }
-            return Boolean(activeDepts[d.deptKey]);
-          };
-
-          const tier1Docs = docs.filter(d => isDocEligible(d, 'tier1'));
-          const tier2Docs = docs.filter(d => isDocEligible(d, 'tier2'));
-          const tier3Docs = docs.filter(d => isDocEligible(d, 'tier3'));
-
-          const validTierGroups = [];
-          if (tier1Docs.length > 0) validTierGroups.push({ tier: 1, docs: tier1Docs });
-          if (tier2Docs.length > 0) validTierGroups.push({ tier: 2, docs: tier2Docs });
-          if (tier3Docs.length > 0) validTierGroups.push({ tier: 3, docs: tier3Docs });
-
-          if (validTierGroups.length === 0) {
-            cell.innerHTML = '<span class="text-[11px] text-slate-300 font-medium">-</span>';
-          } else {
-            const html = validTierGroups.map((group, groupIdx) => {
-              const dividerClass = groupIdx === 0 ? '' : 'pt-2 mt-2 border-t border-dashed border-slate-200';
-              const chipsHtml = group.docs.map(doc => {
-                const closedClass = doc.isClosed ? 'chip-closed' : '';
-                const closedBadge = doc.isClosed ? ` <span class="text-[9px] text-rose-600 font-bold">[${doc.closedReason || '휴진'}]</span>` : '';
-                
-                // 교수명 빠른 찾기 하이라이트/디밍
-                let searchClass = '';
-                if (quickSearchQuery) {
-                  const isMatch = doc.name.toLowerCase().includes(quickSearchQuery) || (doc.deptName || '').toLowerCase().includes(quickSearchQuery);
-                  if (isMatch) {
-                    searchClass = 'ring-2 ring-blue-600 bg-blue-50/90 dark:bg-blue-950/60 font-extrabold';
-                  } else {
-                    searchClass = 'opacity-20 grayscale transition-opacity';
-                  }
-                }
-
-                const shortDept = deptShortMap[doc.deptKey] || '';
-                const deptPrefix = shortDept ? `<span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium mr-1">${shortDept}</span>` : '';
-
-                return `
-                  <span title="${doc.deptName || shortDept} · ${doc.name}" class="chip-item item-${doc.deptKey} ${doc.chipClass} ${closedClass} ${searchClass} px-2 py-0.5 rounded-md text-xs font-semibold inline-block transition-colors">
-                    ${deptPrefix}${doc.name}${closedBadge}
-                  </span>
-                `;
-              }).join('');
-
-              return `<div class="${dividerClass} flex flex-wrap gap-1">${chipsHtml}</div>`;
-            }).join('');
-
-            cell.innerHTML = html;
-          }
+          const { html } = buildTieredChipsHtml(docs, {
+            searchQuery: quickSearchQuery,
+            chipPaddingClass: 'px-2 py-0.5',
+            gapClass: 'gap-1',
+            includeItemClass: true
+          });
+          cell.innerHTML = html || '<span class="text-[11px] text-slate-300 font-medium">-</span>';
         });
       });
     }
@@ -1414,11 +1662,10 @@
     function renderMobileDayView(activeWeek = getActiveWeekData()) {
       if (!activeWeek || !activeWeek.weekly) return;
 
-      const dayNames = ['월', '화', '수', '목', '금'];
       const kst = getKSTInfo();
       const todayStr = kst.todayStr;
 
-      dayNames.forEach(d => {
+      WORK_DAYS.forEach(d => {
         const btn = document.getElementById(`mTab-${d}`);
         if (!btn) return;
         const isSelected = (d === selectedMobileDay);
@@ -1427,7 +1674,7 @@
         const isTomorrow = !activeWeek.isNextWeek && isTomorrowAutoActive && !hasUserOverriddenFocus && (d === tomorrowDayName);
         const isUpcomingClinic = activeWeek.isNextWeek && isTomorrowAutoActive && !hasUserOverriddenFocus && (d === '월');
 
-        // 검색어가 있을 때 해당 요일에 검색된 의사가 출근하는지 확인 (23개과 172인 전수 대상)
+        // 검색어가 있을 때 해당 요일에 검색된 의사가 출근하는지 확인 (23개과 전수 대상)
         const hasSearchMatch = quickSearchQuery && ['AM', 'PM'].some(slot => 
           (activeWeek.weekly[slot] && activeWeek.weekly[slot][d] || [])
             .some(doc => doc.name.toLowerCase().includes(quickSearchQuery) || doc.deptName.toLowerCase().includes(quickSearchQuery))
@@ -1435,7 +1682,6 @@
         const searchBadge = hasSearchMatch ? ' <span class="text-[9px] text-blue-600 font-black">●</span>' : '';
 
         if (isSelected) {
-          const activeBg = 'bg-blue-600';
           let stateTag = '';
           if (isToday) {
             stateTag = ' <span class="text-[9px] px-1 bg-white text-blue-600 rounded-sm">오늘</span>';
@@ -1445,7 +1691,7 @@
             stateTag = ' <span class="text-[9px] px-1 bg-white/25 text-white rounded-sm font-bold">다음 출근</span>';
           }
 
-          btn.className = `py-1.5 rounded-lg font-bold ${activeBg} text-white shadow-xs`;
+          btn.className = 'py-1.5 rounded-lg font-bold bg-blue-600 text-white shadow-xs';
           btn.innerHTML = `${d}${stateTag}${searchBadge}`;
         } else {
           let dotTag = '';
@@ -1470,89 +1716,39 @@
       }
 
       ['AM', 'PM'].forEach(slot => {
-        const targetId = slot === 'AM' ? 'mAmList' : 'mPmList';
-        const badgeId = slot === 'AM' ? 'mAmCountBadge' : 'mPmCountBadge';
-        const el = document.getElementById(targetId);
-        const badge = document.getElementById(badgeId);
+        const el = document.getElementById(slot === 'AM' ? 'mAmList' : 'mPmList');
+        const badge = document.getElementById(slot === 'AM' ? 'mAmCountBadge' : 'mPmCountBadge');
         if (!el) return;
 
         const docs = (activeWeek.weekly[slot] && activeWeek.weekly[slot][selectedMobileDay]) || [];
-        
-        const isDocEligible = (d, tierKey) => {
-          if (!tierMapping[tierKey].includes(d.deptKey)) return false;
-          if (quickSearchQuery) {
-            const isMatch = d.name.toLowerCase().includes(quickSearchQuery) || d.deptName.toLowerCase().includes(quickSearchQuery);
-            if (isMatch) return true; // 검색어와 일치하면 비활성 티어라도 무조건 노출
-            return Boolean(activeDepts[d.deptKey]);
-          }
-          return Boolean(activeDepts[d.deptKey]);
-        };
+        const { html, count } = buildTieredChipsHtml(docs, {
+          searchQuery: quickSearchQuery,
+          chipPaddingClass: 'px-2 py-1',
+          gapClass: 'gap-1.5'
+        });
+        if (badge) badge.innerText = `${count}명`;
 
-        const tier1Docs = docs.filter(d => isDocEligible(d, 'tier1'));
-        const tier2Docs = docs.filter(d => isDocEligible(d, 'tier2'));
-        const tier3Docs = docs.filter(d => isDocEligible(d, 'tier3'));
-
-        const activeCount = tier1Docs.length + tier2Docs.length + tier3Docs.length;
-        if (badge) badge.innerText = `${activeCount}명`;
-
-        const validTierGroups = [];
-        if (tier1Docs.length > 0) validTierGroups.push({ tier: 1, docs: tier1Docs });
-        if (tier2Docs.length > 0) validTierGroups.push({ tier: 2, docs: tier2Docs });
-        if (tier3Docs.length > 0) validTierGroups.push({ tier: 3, docs: tier3Docs });
-
-        if (validTierGroups.length === 0) {
-          if (quickSearchQuery) {
-            const matchingDays = dayNames.filter(d => 
-              ['AM', 'PM'].some(s => (activeWeek.weekly[s] && activeWeek.weekly[s][d] || [])
-                .some(doc => doc.name.toLowerCase().includes(quickSearchQuery) || doc.deptName.toLowerCase().includes(quickSearchQuery)))
-            );
-            if (matchingDays.length > 0) {
-              el.innerHTML = `
-                <div class="p-3 text-xs text-blue-700 dark:text-blue-300 bg-blue-50/70 dark:bg-blue-950/40 rounded-xl border border-blue-200/60 dark:border-blue-900/40">
-                  <p class="font-bold mb-1.5">'${quickSearchQuery}' 교수는 다른 요일에 외래가 있습니다:</p>
-                  <div class="flex gap-1.5 flex-wrap">
-                    ${matchingDays.map(d => `<button onclick="selectMobileDay('${d}')" class="px-2.5 py-1 rounded-md bg-blue-600 text-white font-bold hover:bg-blue-700 text-xs">${d}요일 외래 보기 →</button>`).join('')}
-                  </div>
+        if (count > 0) {
+          el.innerHTML = html;
+        } else if (quickSearchQuery) {
+          const matchingDays = WORK_DAYS.filter(d => 
+            ['AM', 'PM'].some(s => (activeWeek.weekly[s] && activeWeek.weekly[s][d] || [])
+              .some(doc => doc.name.toLowerCase().includes(quickSearchQuery) || doc.deptName.toLowerCase().includes(quickSearchQuery)))
+          );
+          if (matchingDays.length > 0) {
+            el.innerHTML = `
+              <div class="p-3 text-xs text-blue-700 dark:text-blue-300 bg-blue-50/70 dark:bg-blue-950/40 rounded-xl border border-blue-200/60 dark:border-blue-900/40">
+                <p class="font-bold mb-1.5">'${quickSearchQuery}' 교수는 다른 요일에 외래가 있습니다:</p>
+                <div class="flex gap-1.5 flex-wrap">
+                  ${matchingDays.map(d => `<button onclick="selectMobileDay('${d}')" class="px-2.5 py-1 rounded-md bg-blue-600 text-white font-bold hover:bg-blue-700 text-xs">${d}요일 외래 보기 →</button>`).join('')}
                 </div>
-              `;
-            } else {
-              el.innerHTML = `<span class="text-xs text-slate-400 font-medium">'${quickSearchQuery}' 검색 결과가 없습니다.</span>`;
-            }
+              </div>
+            `;
           } else {
-            el.innerHTML = '<span class="text-xs text-slate-400 font-medium">선택된 조건의 출근 의료진이 없습니다.</span>';
+            el.innerHTML = `<span class="text-xs text-slate-400 font-medium">'${quickSearchQuery}' 검색 결과가 없습니다.</span>`;
           }
         } else {
-          const html = validTierGroups.map((group, groupIdx) => {
-            const dividerClass = groupIdx === 0 ? '' : 'pt-2 mt-2 border-t border-dashed border-slate-200';
-            const chipsHtml = group.docs.map(doc => {
-              const closedClass = doc.isClosed ? 'chip-closed' : '';
-              const closedBadge = doc.isClosed ? ` <span class="text-[9px] text-rose-600 font-bold">[${doc.closedReason || '휴진'}]</span>` : '';
-              
-              // 교수명 빠른 찾기 하이라이트/디밍
-              let searchClass = '';
-              if (quickSearchQuery) {
-                const isMatch = doc.name.toLowerCase().includes(quickSearchQuery) || (doc.deptName || '').toLowerCase().includes(quickSearchQuery);
-                if (isMatch) {
-                  searchClass = 'ring-2 ring-blue-600 bg-blue-50/90 dark:bg-blue-950/60 font-extrabold';
-                } else {
-                  searchClass = 'opacity-20 grayscale transition-opacity';
-                }
-              }
-
-              const shortDept = deptShortMap[doc.deptKey] || '';
-              const deptPrefix = shortDept ? `<span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium mr-1">${shortDept}</span>` : '';
-
-              return `
-                <span title="${doc.deptName || shortDept} · ${doc.name}" class="chip-item ${doc.chipClass} ${closedClass} ${searchClass} px-2 py-1 rounded-md text-xs font-semibold inline-block transition-colors">
-                  ${deptPrefix}${doc.name}${closedBadge}
-                </span>
-              `;
-            }).join(' ');
-
-            return `<div class="${dividerClass} flex flex-wrap gap-1.5">${chipsHtml}</div>`;
-          }).join('');
-
-          el.innerHTML = html;
+          el.innerHTML = '<span class="text-xs text-slate-400 font-medium">선택된 조건의 출근 의료진이 없습니다.</span>';
         }
       });
     }
@@ -1562,7 +1758,6 @@
       let touchStartX = 0;
       let touchStartY = 0;
       let touchStartTime = 0;
-      const dayOrder = ['월', '화', '수', '목', '금'];
 
       const container = document.getElementById('mobileCardContainer');
       if (!container) return;
@@ -1581,23 +1776,16 @@
         const diffX = touchEndX - touchStartX;
         const diffY = touchEndY - touchStartY;
 
-        // 1. 임계값 상향 (기존 40px -> 80px: 의도적인 스와이프만 인식)
         const minDistance = 80;
-
-        // 2. 수직 스크롤 간섭 차단: 가로 이동량이 세로 이동량의 1.8배 이상일 때만 반응
         const isHorizontal = Math.abs(diffX) > Math.abs(diffY) * 1.8;
-
-        // 3. 시간 제한 (600ms 이내의 쾌속 제스처만 인식)
         const isFlick = touchDuration < 600;
 
         if (Math.abs(diffX) >= minDistance && isHorizontal && isFlick) {
-          const currentIndex = dayOrder.indexOf(selectedMobileDay);
-          if (diffX < 0 && currentIndex < dayOrder.length - 1) {
-            // Swipe Left -> Next Day
-            selectMobileDay(dayOrder[currentIndex + 1], 'left');
+          const currentIndex = WORK_DAYS.indexOf(selectedMobileDay);
+          if (diffX < 0 && currentIndex < WORK_DAYS.length - 1) {
+            selectMobileDay(WORK_DAYS[currentIndex + 1], 'left');
           } else if (diffX > 0 && currentIndex > 0) {
-            // Swipe Right -> Prev Day
-            selectMobileDay(dayOrder[currentIndex - 1], 'right');
+            selectMobileDay(WORK_DAYS[currentIndex - 1], 'right');
           }
         }
       }, { passive: true });
@@ -1606,27 +1794,31 @@
     // ==========================================
     // DAILY DRILLDOWN VIEW
     // ==========================================
-    function renderDailyOptions(weekDays = [], nextWeekDays = []) {
+    function renderDailyOptions(weekDays = [], nextWeekDays = [], weekSaturday = null, nextWeekSaturday = null) {
       const sel = document.getElementById('dailyDatePicker');
       if (!sel) return;
 
       const prevVal = sel.value;
       const todayStr = getKSTInfo().todayStr;
+      const thisWeekAll = [...weekDays, ...(weekSaturday ? [weekSaturday] : [])];
+      const nextWeekAll = [...nextWeekDays, ...(nextWeekSaturday ? [nextWeekSaturday] : [])];
       
       let html = '';
-      if (weekDays.length > 0) {
-        html += '<optgroup label="이번주 외래">';
-        weekDays.forEach(w => {
+      if (thisWeekAll.length > 0) {
+        html += '<optgroup label="이번주 외래 (월 - 토)">';
+        thisWeekAll.forEach(w => {
           const isToday = w.dateStr === todayStr;
-          html += `<option value="${w.dateStr}" ${isToday ? 'selected' : ''}>${w.dateStr.slice(0,4)}년 ${w.label}요일 ${isToday ? '(오늘)' : ''}</option>`;
+          const satTag = w.dayName === '토' ? ' [토요]' : '';
+          html += `<option value="${w.dateStr}" ${isToday ? 'selected' : ''}>${w.dateStr.slice(0,4)}년 ${w.label}요일${satTag} ${isToday ? '(오늘)' : ''}</option>`;
         });
         html += '</optgroup>';
       }
 
-      if (nextWeekDays.length > 0) {
+      if (nextWeekAll.length > 0) {
         html += '<optgroup label="다음주 외래 (미리보기)">';
-        nextWeekDays.forEach(w => {
-          html += `<option value="${w.dateStr}">${w.dateStr.slice(0,4)}년 다음주 ${w.label}요일</option>`;
+        nextWeekAll.forEach(w => {
+          const satTag = w.dayName === '토' ? ' [토요]' : '';
+          html += `<option value="${w.dateStr}">${w.dateStr.slice(0,4)}년 다음주 ${w.label}요일${satTag}</option>`;
         });
         html += '</optgroup>';
       }
@@ -1765,6 +1957,11 @@
 
       const dateKey = document.getElementById('dailyDatePicker')?.value;
       if (dateKey) renderDailyView(dateKey);
+
+      const satBackdrop = document.getElementById('saturdayModalBackdrop');
+      if (satBackdrop && satBackdrop.classList.contains('opacity-100')) {
+        renderSaturdayModal();
+      }
     }
 
     function updateTierButtonState(tierKey, btnId, color) {
@@ -1816,63 +2013,206 @@
         updatedAt: '오프라인 비상 예시 데이터',
         weekDays: kst.getWeekDates(0),
         nextWeekDays: kst.getWeekDates(1),
+        weekSaturday: kst.getWeekSaturday(0),
+        nextWeekSaturday: kst.getWeekSaturday(1),
         weekly: {
           AM: {
-            '월': [{ deptKey: 'neuro', name: '김한영', chipClass: 'chip-neuro' }],
-            '화': [{ deptKey: 'neuro', name: '문연실', chipClass: 'chip-neuro' }],
-            '수': [{ deptKey: 'neuro', name: '한설희', chipClass: 'chip-neuro' }],
-            '목': [{ deptKey: 'neuro', name: '장재원', chipClass: 'chip-neuro' }, { deptKey: 'endo', name: '박경수', chipClass: 'chip-endo' }],
-            '금': [{ deptKey: 'neuro', name: '김다영', chipClass: 'chip-neuro' }]
+            '월': [{ deptKey: 'neuro', deptName: '신경과', name: '김한영', chipClass: 'chip-neuro' }],
+            '화': [{ deptKey: 'neuro', deptName: '문연실', name: '문연실', chipClass: 'chip-neuro' }],
+            '수': [{ deptKey: 'neuro', deptName: '신경과', name: '한설희', chipClass: 'chip-neuro' }],
+            '목': [{ deptKey: 'neuro', deptName: '신경과', name: '장재원', chipClass: 'chip-neuro' }, { deptKey: 'endo', deptName: '내분비대사내과', name: '박경수', chipClass: 'chip-endo' }],
+            '금': [{ deptKey: 'neuro', deptName: '신경과', name: '김다영', chipClass: 'chip-neuro' }],
+            '토': [{ deptKey: 'endo', deptName: '내분비대사내과', name: '송기호', chipClass: 'chip-endo' }, { deptKey: 'cardio', deptName: '심장혈관내과', name: '신제욱', chipClass: 'chip-cardio' }]
           },
           PM: {
-            '월': [{ deptKey: 'neuro', name: '박정진', chipClass: 'chip-neuro' }],
-            '화': [{ deptKey: 'endo', name: '박경수', chipClass: 'chip-endo' }],
-            '수': [{ deptKey: 'neuro', name: '김동욱', chipClass: 'chip-neuro' }],
-            '목': [{ deptKey: 'neuro', name: '김동욱', chipClass: 'chip-neuro', isClosed: true, closedReason: '오후반휴' }],
-            '금': [{ deptKey: 'cardio', name: '신제욱', chipClass: 'chip-cardio' }]
+            '월': [{ deptKey: 'neuro', deptName: '신경과', name: '박정진', chipClass: 'chip-neuro' }],
+            '화': [{ deptKey: 'endo', deptName: '내분비대사내과', name: '박경수', chipClass: 'chip-endo' }],
+            '수': [{ deptKey: 'neuro', deptName: '신경과', name: '김동욱', chipClass: 'chip-neuro' }],
+            '목': [{ deptKey: 'neuro', deptName: '신경과', name: '김동욱', chipClass: 'chip-neuro', isClosed: true, closedReason: '오후반휴' }],
+            '금': [{ deptKey: 'cardio', deptName: '심장혈관내과', name: '신제욱', chipClass: 'chip-cardio' }],
+            '토': []
           }
-        },
-        daily: {}
+        }
       };
     }
 
     // ==========================================
-    // ABOUT / APP INFO MODAL CONTROLS
+    // MODAL CONTROLS (ABOUT & ON-DEMAND SATURDAY)
     // ==========================================
-    function openAboutModal() {
-      const backdrop = document.getElementById('aboutModalBackdrop');
-      const card = document.getElementById('aboutModalCard');
+    function setModalVisible(backdropId, cardId, visible) {
+      const backdrop = document.getElementById(backdropId);
+      const card = document.getElementById(cardId);
       if (!backdrop || !card) return;
-      
-      backdrop.classList.remove('opacity-0', 'pointer-events-none');
-      backdrop.classList.add('opacity-100', 'pointer-events-auto');
-      card.classList.remove('scale-95');
-      card.classList.add('scale-100');
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closeAboutModal() {
-      const backdrop = document.getElementById('aboutModalBackdrop');
-      const card = document.getElementById('aboutModalCard');
-      if (!backdrop || !card) return;
-      
-      backdrop.classList.remove('opacity-100', 'pointer-events-auto');
-      backdrop.classList.add('opacity-0', 'pointer-events-none');
-      card.classList.remove('scale-100');
-      card.classList.add('scale-95');
-      document.body.style.overflow = '';
-    }
-
-    function handleBackdropClick(event) {
-      // 팝업 외에 블러처리된 영역(백드롭)을 누르면 자동으로 팝업이 꺼짐
-      if (event.target.id === 'aboutModalBackdrop') {
-        closeAboutModal();
+      if (visible) {
+        backdrop.classList.remove('opacity-0', 'pointer-events-none');
+        backdrop.classList.add('opacity-100', 'pointer-events-auto');
+        card.classList.remove('scale-95');
+        card.classList.add('scale-100');
+        document.body.style.overflow = 'hidden';
+      } else {
+        backdrop.classList.remove('opacity-100', 'pointer-events-auto');
+        backdrop.classList.add('opacity-0', 'pointer-events-none');
+        card.classList.remove('scale-100');
+        card.classList.add('scale-95');
+        document.body.style.overflow = '';
       }
     }
 
-    // ESC 키로 모달 닫기
+    function openAboutModal() {
+      setModalVisible('aboutModalBackdrop', 'aboutModalCard', true);
+    }
+
+    function closeAboutModal() {
+      setModalVisible('aboutModalBackdrop', 'aboutModalCard', false);
+    }
+
+    function openSaturdayModal(weekOffset = currentWeekOffset) {
+      satModalWeekOffset = weekOffset === 1 ? 1 : 0;
+      satModalSearch = '';
+      const searchEl = document.getElementById('satSearchInput');
+      if (searchEl) searchEl.value = '';
+      renderSaturdayModal();
+      setModalVisible('saturdayModalBackdrop', 'saturdayModalCard', true);
+    }
+
+    function closeSaturdayModal() {
+      setModalVisible('saturdayModalBackdrop', 'saturdayModalCard', false);
+    }
+
+    function switchSatModalWeek(offset) {
+      satModalWeekOffset = offset === 1 ? 1 : 0;
+      renderSaturdayModal();
+    }
+
+    function setSatModalFilterMode(showAll) {
+      satModalShowAll = Boolean(showAll);
+      renderSaturdayModal();
+    }
+
+    function handleSatModalSearch(val) {
+      satModalSearch = (val || '').trim().toLowerCase();
+      renderSaturdayModal();
+    }
+
+    function openSaturdayInDailyView() {
+      if (!currentScheduleData) return;
+      const sat = satModalWeekOffset === 1 ? currentScheduleData.nextWeekSaturday : currentScheduleData.weekSaturday;
+      closeSaturdayModal();
+      if (sat && sat.dateStr) {
+        selectDailyDate(sat.dateStr);
+      }
+    }
+
+    function renderSaturdayModal() {
+      if (!currentScheduleData) return;
+      const kst = getKSTInfo();
+      const thisSat = currentScheduleData.weekSaturday || kst.getWeekSaturday(0);
+      const nextSat = currentScheduleData.nextWeekSaturday || kst.getWeekSaturday(1);
+      const activeSat = satModalWeekOffset === 1 ? nextSat : thisSat;
+      const matrix = satModalWeekOffset === 1 ? (currentScheduleData.nextWeekly || { AM: {}, PM: {} }) : (currentScheduleData.weekly || { AM: {}, PM: {} });
+
+      const amDocs = (matrix.AM && matrix.AM['토']) || [];
+      const pmDocs = (matrix.PM && matrix.PM['토']) || [];
+
+      const countFiltered = (list) => list.filter(d => activeDepts[d.deptKey]).length;
+      const filteredTotal = countFiltered(amDocs) + countFiltered(pmDocs);
+      const allTotal = amDocs.length + pmDocs.length;
+
+      // 타이틀 및 날짜 배지 업데이트
+      const subEl = document.getElementById('satModalSubtitle');
+      if (subEl && activeSat) {
+        const y = activeSat.dateStr.slice(0, 4);
+        const m = Number(activeSat.dateStr.slice(4, 6));
+        const d = Number(activeSat.dateStr.slice(6, 8));
+        const isToday = activeSat.dateStr === kst.todayStr;
+        subEl.innerHTML = `${y}.${m}.${d} (토) · ${satModalWeekOffset === 1 ? '다음주' : '이번주'}${isToday ? ' <span class="ml-1 text-[9px] px-1.5 py-0.5 rounded bg-blue-600 text-white font-black">오늘</span>' : ''}`;
+      }
+
+      // 주차 탭 업데이트
+      const btnThis = document.getElementById('satBtnThis');
+      const btnNext = document.getElementById('satBtnNext');
+      if (btnThis && btnNext) {
+        btnThis.innerText = `이번주 ${thisSat ? thisSat.label.replace('토 ', '') : ''}`;
+        btnNext.innerText = `다음주 ${nextSat ? nextSat.label.replace('토 ', '') : ''}`;
+        const activeCls = 'px-2.5 py-1 rounded-md font-bold bg-blue-600 text-white shadow-2xs transition-all text-[11px]';
+        const idleCls = 'px-2.5 py-1 rounded-md font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all text-[11px]';
+        btnThis.className = satModalWeekOffset === 0 ? activeCls : idleCls;
+        btnNext.className = satModalWeekOffset === 1 ? activeCls : idleCls;
+      }
+
+      // 필터 모드 버튼 업데이트 (내 필터 vs 전체 과)
+      const btnFlt = document.getElementById('satFilterMine');
+      const btnAll = document.getElementById('satFilterAll');
+      if (btnFlt && btnAll) {
+        btnFlt.innerText = `내 필터 (${filteredTotal}명)`;
+        btnAll.innerText = `전체 과 (${allTotal}명)`;
+        const activeCls = 'px-2.5 py-1 rounded-md font-bold bg-slate-900 dark:bg-blue-600 text-white shadow-2xs transition-all text-[11px]';
+        const idleCls = 'px-2.5 py-1 rounded-md font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all text-[11px]';
+        btnFlt.className = !satModalShowAll ? activeCls : idleCls;
+        btnAll.className = satModalShowAll ? activeCls : idleCls;
+      }
+
+      // 오전 렌더링
+      const amRes = buildTieredChipsHtml(amDocs, {
+        searchQuery: satModalSearch,
+        forceAll: satModalShowAll,
+        chipPaddingClass: 'px-2.5 py-1',
+        gapClass: 'gap-1.5'
+      });
+      const amEl = document.getElementById('satAmList');
+      const amBadge = document.getElementById('satAmBadge');
+      if (amBadge) amBadge.innerText = `${amRes.count}명`;
+      if (amEl) {
+        if (amRes.count > 0) {
+          amEl.innerHTML = amRes.html;
+        } else if (!satModalShowAll && allTotal > 0 && !satModalSearch) {
+          amEl.innerHTML = `
+            <div class="flex items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <span>현재 선택한 진료과의 토요일 오전 출근 의사가 없습니다.</span>
+              <button onclick="setSatModalFilterMode(true)" class="shrink-0 px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold text-[11px] hover:bg-blue-700">전체 ${allTotal}명 보기 →</button>
+            </div>
+          `;
+        } else {
+          amEl.innerHTML = '<span class="text-xs text-slate-400 font-medium">해당 조건의 토요일 오전 외래 진료가 없습니다.</span>';
+        }
+      }
+
+      // 오후 렌더링 (실제 출근 의사가 있을 때만 펼침, 평소 0명일 때는 슬림 안내)
+      const pmWrap = document.getElementById('satPmWrapper');
+      const pmEl = document.getElementById('satPmList');
+      const pmBadge = document.getElementById('satPmBadge');
+      const pmEmptyNote = document.getElementById('satPmEmptyNote');
+      if (pmDocs.length > 0) {
+        const pmRes = buildTieredChipsHtml(pmDocs, {
+          searchQuery: satModalSearch,
+          forceAll: satModalShowAll,
+          chipPaddingClass: 'px-2.5 py-1',
+          gapClass: 'gap-1.5'
+        });
+        if (pmWrap) pmWrap.classList.remove('hidden');
+        if (pmEmptyNote) pmEmptyNote.classList.add('hidden');
+        if (pmBadge) pmBadge.innerText = `${pmRes.count}명`;
+        if (pmEl) pmEl.innerHTML = pmRes.html || '<span class="text-xs text-slate-400 font-medium">해당 조건의 오후 외래가 없습니다.</span>';
+      } else {
+        if (pmWrap) pmWrap.classList.add('hidden');
+        if (pmEmptyNote) pmEmptyNote.classList.remove('hidden');
+      }
+    }
+
+    function handleBackdropClick(event) {
+      if (event.target.id === 'aboutModalBackdrop') closeAboutModal();
+      if (event.target.id === 'saturdayModalBackdrop') closeSaturdayModal();
+    }
+
+    // ESC 키로 모달 닫기 및 인쇄 직전 A4 세로 레이아웃 동기화
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeAboutModal();
+      if (e.key === 'Escape') {
+        closeAboutModal();
+        closeSaturdayModal();
+      }
+    });
+    window.addEventListener('beforeprint', () => {
+      renderPrintPortraitView();
     });
 
     // Initialize
@@ -2011,6 +2351,94 @@
       <div class="px-4 sm:px-5 py-3 bg-slate-50/90 border-t border-slate-200/80 flex items-center justify-between text-[11px] shrink-0">
         <span class="text-slate-400 font-medium">나라약국 조제실 업무 지원 시스템</span>
         <button onclick="closeAboutModal()" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold transition-all shadow-xs active:scale-95">
+          닫기
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ON-DEMAND SATURDAY SCHEDULE MODAL (토요일 외래 출근부 팝업) -->
+  <div id="saturdayModalBackdrop"
+       onclick="handleBackdropClick(event)"
+       class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 transition-all duration-200 opacity-0 pointer-events-none">
+
+    <div id="saturdayModalCard"
+         class="stageshow-card bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-slate-200/90 overflow-hidden flex flex-col max-h-[88vh] transition-transform duration-200 scale-95"
+         onclick="event.stopPropagation()">
+
+      <!-- Modal Header -->
+      <div class="px-4 sm:px-5 py-3.5 bg-slate-50/90 border-b border-slate-200/80 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2.5">
+          <span class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200/70 dark:border-blue-800/60 flex items-center justify-center text-blue-600 dark:text-blue-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.85" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"></path></svg>
+          </span>
+          <div>
+            <h2 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-slate-100">토요일 외래 출근부</h2>
+            <p id="satModalSubtitle" class="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">토요일 일정 로딩 중...</p>
+          </div>
+        </div>
+        <button onclick="closeSaturdayModal()" aria-label="닫기" class="w-7 h-7 rounded-lg bg-slate-200/60 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors text-xs font-bold">
+          ✕
+        </button>
+      </div>
+
+      <!-- Modal Sub-Controls (주차 전환 + 내 필터/전체 + 검색) -->
+      <div class="px-4 sm:px-5 py-2.5 bg-white dark:bg-[#0d1424] border-b border-slate-100 dark:border-slate-800 space-y-2 shrink-0">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <div class="inline-flex bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-lg border border-slate-200/70 dark:border-slate-700/70">
+            <button onclick="switchSatModalWeek(0)" id="satBtnThis" class="px-2.5 py-1 rounded-md font-bold bg-blue-600 text-white text-[11px]">이번주</button>
+            <button onclick="switchSatModalWeek(1)" id="satBtnNext" class="px-2.5 py-1 rounded-md font-semibold text-slate-600 text-[11px]">다음주</button>
+          </div>
+          <div class="inline-flex bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-lg border border-slate-200/70 dark:border-slate-700/70">
+            <button onclick="setSatModalFilterMode(false)" id="satFilterMine" class="px-2.5 py-1 rounded-md font-bold bg-slate-900 text-white text-[11px]">내 필터</button>
+            <button onclick="setSatModalFilterMode(true)" id="satFilterAll" class="px-2.5 py-1 rounded-md font-semibold text-slate-600 text-[11px]">전체 과</button>
+          </div>
+        </div>
+        <div class="relative flex items-center">
+          <svg class="w-3.5 h-3.5 absolute left-2.5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path stroke-linecap="round" d="M21 21l-4.35-4.35"></path></svg>
+          <input type="text" id="satSearchInput" placeholder="토요일 출근 교수명 또는 진료과 검색..."
+                 oninput="handleSatModalSearch(this.value)"
+                 class="w-full text-xs pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+        </div>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-4 sm:p-5 overflow-y-auto space-y-3 text-xs">
+        <!-- 오전 외래 -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between text-xs font-bold text-amber-600">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+              <span>오전 외래 (09:00 - 12:30)</span>
+            </div>
+            <span id="satAmBadge" class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60">0명</span>
+          </div>
+          <div id="satAmList" class="p-3 rounded-xl bg-slate-50/80 border border-slate-100 min-h-[54px]"></div>
+        </div>
+
+        <!-- 오후 외래 (출근 의사 존재 시에만 확장) -->
+        <div id="satPmWrapper" class="hidden space-y-1.5 pt-2 border-t border-slate-100">
+          <div class="flex items-center justify-between text-xs font-bold text-blue-600">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+              <span>오후 외래 (13:30 - 17:00)</span>
+            </div>
+            <span id="satPmBadge" class="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/60">0명</span>
+          </div>
+          <div id="satPmList" class="p-3 rounded-xl bg-slate-50/80 border border-slate-100"></div>
+        </div>
+        <div id="satPmEmptyNote" class="text-[11px] text-slate-400 font-medium px-1">
+          · 토요일 오후 외래 진료는 없습니다.
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-4 sm:px-5 py-3 bg-slate-50/90 border-t border-slate-200/80 flex items-center justify-between text-[11px] shrink-0">
+        <button onclick="openSaturdayInDailyView()" class="text-blue-600 dark:text-blue-400 font-bold hover:underline">
+          특정 날짜 전체 명단 보기 →
+        </button>
+        <button onclick="closeSaturdayModal()" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold transition-all shadow-xs active:scale-95">
           닫기
         </button>
       </div>

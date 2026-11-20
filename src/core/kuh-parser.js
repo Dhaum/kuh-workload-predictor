@@ -61,6 +61,51 @@ function getWeekDays(referenceDate = new Date(), weekOffset = 0) {
 }
 
 /**
+ * 주어진 날짜가 속한 주의 토요일 메타데이터 반환 (YYYYMMDD 형식)
+ * @param {Date} referenceDate 기준 일자
+ * @param {number} weekOffset 0: 이번주, 1: 다음주
+ */
+function getWeekSaturday(referenceDate = new Date(), weekOffset = 0) {
+  const utc = referenceDate.getTime() + (referenceDate.getTimezoneOffset() * 60000);
+  const kst = new Date(utc + (9 * 3600000));
+  const day = kst.getDay();
+  const diffToMon = day === 0 ? -6 : 1 - day;
+  const sat = new Date(kst);
+  sat.setDate(kst.getDate() + diffToMon + (weekOffset * 7) + 5);
+
+  const yyyy = sat.getFullYear();
+  const mm = String(sat.getMonth() + 1).padStart(2, '0');
+  const dd = String(sat.getDate()).padStart(2, '0');
+  return {
+    dateStr: `${yyyy}${mm}${dd}`,
+    dayName: '토',
+    label: `토 (${Number(mm)}/${Number(dd)})`
+  };
+}
+
+/**
+ * 주간 매트릭스(weekly/nextWeekly)로부터 일별(daily) 맵을 동적 복원
+ * (페이로드 중복 제거 및 하위 호환 유틸리티)
+ */
+function hydrateDailyFromWeekly(payload) {
+  if (!payload || payload.daily) return payload?.daily || {};
+  const daily = {};
+  const attachWeek = (days, sat, matrix) => {
+    if (!matrix) return;
+    const allDays = [...(days || []), ...(sat ? [sat] : [])];
+    for (const d of allDays) {
+      daily[d.dateStr] = {
+        AM: (matrix.AM && matrix.AM[d.dayName]) || [],
+        PM: (matrix.PM && matrix.PM[d.dayName]) || []
+      };
+    }
+  };
+  attachWeek(payload.weekDays, payload.weekSaturday, payload.weekly);
+  attachWeek(payload.nextWeekDays, payload.nextWeekSaturday, payload.nextWeekly);
+  return daily;
+}
+
+/**
  * 23개과(또는 지정된 진료과 목록) 전체 스케줄 수합 및 파싱
  */
 async function buildFullSchedule(deptList = ALL_DEPTS) {
@@ -68,11 +113,14 @@ async function buildFullSchedule(deptList = ALL_DEPTS) {
   const kst = getKSTDateString(now);
   const weekDays = getWeekDays(now, 0);
   const nextWeekDays = getWeekDays(now, 1);
+  const weekSaturday = getWeekSaturday(now, 0);
+  const nextWeekSaturday = getWeekSaturday(now, 1);
   const baseYearMonth = weekDays[0].dateStr.slice(0, 6); // YYYYMM
   const baseMonth = baseYearMonth.slice(4, 6); // MM
   const yyyymm01 = `${baseYearMonth}01`;
-  const weekDateSet = new Set(weekDays.map(w => w.dateStr));
-  const nextWeekDateSet = new Set(nextWeekDays.map(w => w.dateStr));
+
+  const thisWeekDayByDate = new Map([...weekDays, weekSaturday].map(w => [w.dateStr, w.dayName]));
+  const nextWeekDayByDate = new Map([...nextWeekDays, nextWeekSaturday].map(w => [w.dateStr, w.dayName]));
 
   console.log(`[KUH-Parser] 데이터 수합 시작: ${deptList.length}개 진료과 (기준: ${kst.formatted})`);
 
@@ -109,16 +157,13 @@ async function buildFullSchedule(deptList = ALL_DEPTS) {
     };
   }, 4);
 
-  // 4. 데이터 정규화 및 주간/일별 매트릭스 구성 (이번주 + 다음주 동시 지원)
-  const weekly = {
-    AM: { '월': [], '화': [], '수': [], '목': [], '금': [] },
-    PM: { '월': [], '화': [], '수': [], '목': [], '금': [] }
-  };
-  const nextWeekly = {
-    AM: { '월': [], '화': [], '수': [], '목': [], '금': [] },
-    PM: { '월': [], '화': [], '수': [], '목': [], '금': [] }
-  };
-  const daily = {}; // "YYYYMMDD": { AM: [], PM: [] }
+  // 4. 데이터 정규화 및 주간 매트릭스 구성 (이번주 + 다음주 월~토, 중복 daily 제거로 페이로드 90%+ 경량화)
+  const createEmptyWeekMatrix = () => ({
+    AM: { '월': [], '화': [], '수': [], '목': [], '금': [], '토': [] },
+    PM: { '월': [], '화': [], '수': [], '목': [], '금': [], '토': [] }
+  });
+  const weekly = createEmptyWeekMatrix();
+  const nextWeekly = createEmptyWeekMatrix();
   const seenSlots = new Set();
 
   for (const item of allMonthlySchedules) {
@@ -128,6 +173,10 @@ async function buildFullSchedule(deptList = ALL_DEPTS) {
 
     for (const entry of monthlyList) {
       const date = entry.orddd; // YYYYMMDD
+      const thisDayName = thisWeekDayByDate.get(date);
+      const nextDayName = nextWeekDayByDate.get(date);
+      if (!thisDayName && !nextDayName) continue; // 이번주/다음주(월~토) 외 불필요한 미래/과거 데이터 제외
+
       const timeSlot = entry.apflag_nm === '오전' ? 'AM' : 'PM';
       const slotKey = `${task.deptCd}_${task.sid}_${date}_${timeSlot}`;
       if (seenSlots.has(slotKey)) continue;
@@ -155,27 +204,15 @@ async function buildFullSchedule(deptList = ALL_DEPTS) {
         closedReason
       };
 
-      // 1) 이번주 매트릭스 집계
-      if (weekDateSet.has(date)) {
-        const dayObj = weekDays.find(w => w.dateStr === date);
-        if (dayObj) {
-          weekly[timeSlot][dayObj.dayName].push(docRecord);
-        }
+      // 1) 이번주 (월~토) 매트릭스 집계
+      if (thisDayName) {
+        weekly[timeSlot][thisDayName].push(docRecord);
       }
 
-      // 2) 다음주 매트릭스 집계
-      if (nextWeekDateSet.has(date)) {
-        const dayObj = nextWeekDays.find(w => w.dateStr === date);
-        if (dayObj) {
-          nextWeekly[timeSlot][dayObj.dayName].push(docRecord);
-        }
+      // 2) 다음주 (월~토) 매트릭스 집계
+      if (nextDayName) {
+        nextWeekly[timeSlot][nextDayName].push(docRecord);
       }
-
-      // 3) 일별 출근부 집계
-      if (!daily[date]) {
-        daily[date] = { AM: [], PM: [] };
-      }
-      daily[date][timeSlot].push(docRecord);
     }
   }
 
@@ -185,17 +222,20 @@ async function buildFullSchedule(deptList = ALL_DEPTS) {
     weekStartDate: weekDays[0].dateStr,
     weekDays,
     nextWeekDays,
+    weekSaturday,
+    nextWeekSaturday,
     weekly,
-    nextWeekly,
-    daily
+    nextWeekly
   };
 
-  console.log(`[KUH-Parser] 스케줄 구성 완료! (주간 데이터 및 ${Object.keys(daily).length}일치 일별 데이터 확보)`);
+  console.log(`[KUH-Parser] 경량 스케줄 구성 완료! (이번주+다음주 월~토 12일 매트릭스, 토요일 오전 이번주 ${weekly.AM['토'].length}명 / 다음주 ${nextWeekly.AM['토'].length}명)`);
   return payload;
 }
 
 module.exports = {
   getKSTDateString,
   getWeekDays,
+  getWeekSaturday,
+  hydrateDailyFromWeekly,
   buildFullSchedule
 };

@@ -7,7 +7,7 @@
  * - 일정 데이터(/api/schedule, /data/schedule.json): Network-First(25s~30s) + Cache-Fallback
  */
 
-const CACHE_NAME = 'kuh-schedule-pwa-v1.5.0';
+const CACHE_NAME = 'kuh-schedule-pwa-v1.6.0';
 const DATA_CACHE_NAME = 'kuh-schedule-data-v2';
 const CANONICAL_DATA_URL = '/api/schedule';
 

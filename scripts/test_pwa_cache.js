@@ -113,6 +113,9 @@ async function testFrontendIntegrity() {
   assert(!html.includes('w.dayName === todayDayName'), '주간 헤더 요일명 폴백(w.dayName === todayDayName) 제거');
   assert(html.includes('w.dateStr === todayStr'), '주간 헤더 오늘 날짜(w.dateStr === todayStr) 엄격 일치 적용');
   assert(html.includes('isScheduleCurrentWeek'), '이번주 데이터 유효성 검증(isScheduleCurrentWeek) 탑재');
+  assert(html.includes('hydrateScheduleData'), '슬림 페이로드 동적 하이드레이션(hydrateScheduleData) 탑재');
+  assert(html.includes('saturdayModalBackdrop') && html.includes('openSaturdayModal'), '토요일 외래 온디맨드 팝업 모달 탑재');
+  assert(html.includes('size: A4 portrait') && html.includes('printWeeklyPortrait'), 'A4 세로(portrait) 모바일형 주간 인쇄 레이아웃 탑재');
   assert(html.includes('kuh-schedule-data-v2'), '신규 데이터 캐시(kuh-schedule-data-v2) 동기화');
   assert(!html.includes('kuh-schedule-data-v1'), '구버전 데이터 캐시(kuh-schedule-data-v1) 참조 제거');
 
@@ -150,7 +153,12 @@ async function testOfflineFallbackData() {
   assert(Boolean(data.updatedAt), `최신화 일시 기록 확인: ${data.updatedAt}`);
   assert(Array.isArray(data.weekDays) && data.weekDays.length === 5, '이번주 월~금 5일 매트릭스 존재');
   assert(Array.isArray(data.nextWeekDays) && data.nextWeekDays.length === 5, '다음주 월~금 5일 매트릭스 존재');
+  assert(Boolean(data.weekSaturday && data.weekSaturday.dayName === '토'), '이번주 토요일 메타데이터(weekSaturday) 존재');
+  assert(Boolean(data.nextWeekSaturday && data.nextWeekSaturday.dayName === '토'), '다음주 토요일 메타데이터(nextWeekSaturday) 존재');
   assert(Boolean(data.weekly && data.weekly.AM && data.weekly.PM), '오전/오후 weekly 스케줄 매트릭스 존재');
+  assert(Array.isArray(data.weekly.AM['토']) && Array.isArray(data.nextWeekly.AM['토']), '이번주/다음주 토요일 오전 슬롯 존재');
+  assert(!data.daily, '중복 daily 페이로드 제거(슬림화) 확인');
+  assert(content.length < 300 * 1024, `schedule.json 슬림화 용량 상한(300KB 미만) 통과: ${(content.length / 1024).toFixed(1)} KB`);
   
   let docCount = 0;
   for (const slot of ['AM', 'PM']) {
